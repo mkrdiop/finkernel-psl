@@ -1,0 +1,8 @@
+fastapi==0.115.0
+uvicorn==0.31.0
+numpy==2.1.1
+scipy==1.14.1
+QuantLib-Python==1.34.0
+pydantic==2.9.2
+PyYAML==6.0.2
+pytest==8.3.3
