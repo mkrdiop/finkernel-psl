@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finkernel"
+version = "1.0.0"
+description = "Financial Product Specification Language (PSL) & Execution Engine"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.31.0",
+    "numpy>=2.1.1",
+    "scipy>=1.14.1",
+    "QuantLib-Python>=1.34.0",
+    "pydantic>=2.9.2",
+    "PyYAML>=6.0.2"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "hypothesis>=6.112.0"
+]

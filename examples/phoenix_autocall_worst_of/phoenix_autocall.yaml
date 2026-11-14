@@ -1,0 +1,100 @@
+psl_version: "1.0"
+
+product:
+  id: "FK-PHOENIX-001"
+  name: "Phoenix Autocallable Worst-of"
+  category: "structured_product"
+  subtype: "phoenix_autocallable"
+  currency: "EUR"
+
+contract:
+  notional:
+    amount: 100000.00
+    currency: "EUR"
+  inception_date: "2027-01-15"
+  maturity_date: "2032-01-15"
+  settlement:
+    currency: "EUR"
+    payment_lag: 3
+    payment_lag_unit: "business_days"
+
+underlyings:
+  - id: "SX5E"
+    type: "equity_index"
+    name: "EURO STOXX 50"
+    market_identifier:
+      scheme: "ISIN"
+      value: "EU0009658145"
+    currency: "EUR"
+  - id: "SPX"
+    type: "equity_index"
+    name: "S&P 500"
+    market_identifier:
+      scheme: "INDEX"
+      value: "SPX"
+    currency: "USD"
+  - id: "NKY"
+    type: "equity_index"
+    name: "Nikkei 225"
+    market_identifier:
+      scheme: "INDEX"
+      value: "NKY"
+    currency: "JPY"
+
+reference:
+  aggregation: "WORST_OF"
+  underlyings:
+    - "SX5E"
+    - "SPX"
+    - "NKY"
+
+schedule:
+  observation_schedule:
+    frequency: "quarterly"
+    first_observation: "2027-04-15"
+    calendar: "TARGET"
+    business_day_convention: "modified_following"
+
+payoff:
+  components:
+    - id: "coupon"
+      type: "memory_coupon"
+      annual_rate: 0.10
+      condition:
+        reference: "worst_of_performance"
+        operator: "GTE"
+        threshold: 0.70
+      memory:
+        enabled: true
+        unpaid_coupon: "accumulate"
+
+    - id: "autocall"
+      type: "autocall"
+      eligibility:
+        start_observation: 2
+      trigger:
+        reference: "worst_of_performance"
+        operator: "GTE"
+        threshold: 1.00
+      terminate_product: true
+
+    - id: "capital_redemption"
+      type: "conditional_capital_protection"
+      barrier:
+        level: 0.60
+      observation: "maturity"
+
+valuation:
+  model:
+    method: "monte_carlo"
+    paths: 200000
+    underlying_model:
+      type: "correlated_lognormal"
+    correlation:
+      source: "market_data"
+
+risk:
+  measures:
+    - "delta"
+    - "gamma"
+    - "value_at_risk"
