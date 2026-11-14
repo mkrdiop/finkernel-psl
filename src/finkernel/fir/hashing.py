@@ -1,7 +1,13 @@
 import hashlib
-import json
-from typing import Dict, Any
+from typing import Any
 
-def compute_canonical_hash(fir_body: Dict[str, Any]) -> str:
-    canonical_json = json.dumps(fir_body, sort_keys=True, separators=(',', ':'))
-    return hashlib.sha256(canonical_json.encode('utf-8')).hexdigest()[:16]
+from finkernel.fir.canonicalizer import canonical_json
+
+
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def compute_canonical_hash(obj: Any) -> str:
+    """SHA-256 complet (64 hex) de la forme canonique de ``obj``."""
+    return sha256_text(canonical_json(obj))

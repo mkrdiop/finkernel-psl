@@ -1,94 +1,102 @@
+"""Financial Product Compiler (blueprint §4.5).
+
+Pipeline : Parser -> AST/Type checker -> Semantic validator -> Contract validator
+-> Normalizer -> FIR -> sérialisation canonique -> hash.
+Le compilateur ne fait ni pricing ni simulation.
+"""
+from __future__ import annotations
+
+import logging
+import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Callable, List, Optional, Tuple
+
+from finkernel.core.diagnostics import Diagnostic, DiagnosticBag
+from finkernel.core.errors import PSLSyntaxError
+from finkernel.fir.hashing import compute_canonical_hash, sha256_text
+from finkernel.fir.models import FIR_VERSION, FIRDocument, FIRProvenance
+from finkernel.psl.compiler.ast_builder import build_ast
+from finkernel.psl.compiler.normalizer import normalize
 from finkernel.psl.parser.yaml_parser import parse_yaml_strict
-from finkernel.psl.ast.nodes import PSLDocumentAST, ProductDeclaration, ContractDeclaration, NotionalNode, SettlementNode, UnderlyingDeclaration, ReferenceAggregationNode, PayoffComponentNode
+from finkernel.psl.validation.contractual import validate_contract
 from finkernel.psl.validation.semantic import validate_semantics
-from finkernel.fir.models import FIRModel
-from finkernel.fir.hashing import compute_canonical_hash
-from finkernel.core.errors import FinkernelError
+
+log = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class CompilationResult:
+    success: bool
+    fir: Optional[FIRDocument]
+    diagnostics: Tuple[Diagnostic, ...]
+
+    @property
+    def errors(self) -> List[Diagnostic]:
+        return [d for d in self.diagnostics if d.severity.value == "error"]
+
+    @property
+    def warnings(self) -> List[Diagnostic]:
+        return [d for d in self.diagnostics if d.severity.value == "warning"]
+
 
 class PSLCompiler:
     COMPILER_VERSION = "1.0.0"
 
-    @classmethod
-    def compile_yaml(cls, yaml_content: str) -> Tuple_Result:
-        pass
+    def __init__(self, clock: Optional[Callable[[], datetime]] = None,
+                 id_factory: Optional[Callable[[], str]] = None) -> None:
+        # Horloge et générateur d'identifiants injectables => tests déterministes.
+        self._clock = clock or (lambda: datetime.now(timezone.utc))
+        self._id_factory = id_factory or (lambda: str(uuid.uuid4()))
+
+    def compile(self, source: str) -> CompilationResult:
+        bag = DiagnosticBag()
+        try:
+            try:
+                parsed = parse_yaml_strict(source)
+            except PSLSyntaxError as e:
+                bag.error("E-SYNTAX", str(e), line=e.line, column=e.column)
+                return CompilationResult(False, None, tuple(bag.items))
+
+            bag.locator = parsed.source_map.locate
+            ast = build_ast(parsed.data, bag)
+            if ast is None or bag.has_errors:
+                return CompilationResult(False, None, tuple(bag.items))
+
+            validate_semantics(ast, bag)
+            validate_contract(ast, bag)
+            if bag.has_errors:
+                return CompilationResult(False, None, tuple(bag.items))
+
+            contract, valuation, risk, metadata = normalize(ast)
+            provenance = FIRProvenance(
+                compilation_id=self._id_factory(),
+                compiled_at=self._clock().isoformat(),
+                compiler_version=self.COMPILER_VERSION,
+                psl_version=ast.psl_version,
+                fir_version=FIR_VERSION,
+                source_hash=sha256_text(source.replace("\r\n", "\n")),
+            )
+            fir = FIRDocument(
+                contract=contract,
+                contract_hash=compute_canonical_hash(contract),
+                valuation_config=valuation,
+                valuation_hash=compute_canonical_hash(valuation) if valuation is not None else None,
+                risk_config=risk,
+                risk_hash=compute_canonical_hash(risk) if risk is not None else None,
+                metadata=metadata,
+                provenance=provenance,
+            )
+            return CompilationResult(True, fir, tuple(bag.items))
+        except Exception as e:  # défaut du compilateur, pas erreur de spécification
+            log.exception("Internal compiler error")
+            bag.error("E-INTERNAL",
+                      f"Internal compiler error ({type(e).__name__}). This is a compiler defect, "
+                      "not an error in the specification.")
+            return CompilationResult(False, None, tuple(bag.items))
 
     @classmethod
     def compile_yaml(cls, yaml_content: str):
-        try:
-            raw = parse_yaml_strict(yaml_content)
-            
-            prod = raw.get("product", {})
-            contract = raw.get("contract", {})
-            notional = contract.get("notional", {})
-            settlement = contract.get("settlement", {})
-            
-            ast = PSLDocumentAST(
-                psl_version=raw.get("psl_version", "1.0"),
-                product=ProductDeclaration(
-                    id=prod.get("id"),
-                    name=prod.get("name"),
-                    category=prod.get("category"),
-                    subtype=prod.get("subtype"),
-                    currency=prod.get("currency")
-                ),
-                contract=ContractDeclaration(
-                    notional=NotionalNode(amount=notional.get("amount"), currency=notional.get("currency")),
-                    inception_date=contract.get("inception_date"),
-                    maturity_date=contract.get("maturity_date"),
-                    settlement=SettlementNode(
-                        currency=settlement.get("currency"),
-                        payment_lag=settlement.get("payment_lag", 0),
-                        payment_lag_unit=settlement.get("payment_lag_unit", "business_days")
-                    )
-                ),
-                underlyings=[UnderlyingDeclaration(**u) for u in raw.get("underlyings", [])],
-                reference=ReferenceAggregationNode(**raw.get("reference", {})),
-                schedule=raw.get("schedule", {}),
-                payoff_components=[
-                    PayoffComponentNode(id=c.get("id"), type=c.get("type"), raw_config=c)
-                    for c in raw.get("payoff", {}).get("components", [])
-                ],
-                valuation=raw.get("valuation", {}),
-                risk=raw.get("risk", {}),
-                metadata=raw.get("metadata")
-            )
-            
-            errors = validate_semantics(ast)
-            if errors:
-                return False, None, errors
-                
-            risk_measures = ast.risk.get("measures", []) if isinstance(ast.risk, dict) else ast.risk
-            
-            fir_body = {
-                "product_id": ast.product.id,
-                "product_name": ast.product.name,
-                "subtype": ast.product.subtype,
-                "currency": ast.product.currency,
-                "notional": ast.contract.notional.amount,
-                "inception_date": ast.contract.inception_date,
-                "maturity_date": ast.contract.maturity_date,
-                "underlyings": [u.model_dump() for u in ast.underlyings],
-                "reference": ast.reference.model_dump(),
-                "schedule": ast.schedule,
-                "components": [c.raw_config for c in ast.payoff_components],
-                "valuation_config": ast.valuation,
-                "risk_measures": risk_measures
-            }
-            
-            canonical_hash = compute_canonical_hash(fir_body)
-            compiled_at = datetime.now(timezone.utc).isoformat()
-            
-            fir = FIRModel(
-                canonical_hash=canonical_hash,
-                compiled_at=compiled_at,
-                **fir_body
-            )
-            
-            return True, fir, []
-            
-        except FinkernelError as e:
-            return False, None, [str(e)]
-        except Exception as e:
-            return False, None, [f"Internal Compiler Error: {str(e)}"]
+        """API de compatibilité v1 : ``(success, fir, [messages d'erreur])``."""
+        result = cls().compile(yaml_content)
+        return result.success, result.fir, [d.format() for d in result.errors]

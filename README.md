@@ -1,11 +1,34 @@
 # FINKERNEL Platform v1.0
-*The Engine Behind Financial Innovation.* [cite: 4]
 
-FINKERNEL is an institutional software infrastructure designed to specify, validate, compile, simulate, and value structured financial products [cite: 4].
+*The Engine Behind Financial Innovation.*
 
-## Core Architecture
-1. **PSL (Financial Product Specification Language)**: Declarative, typed YAML specifications [cite: 4].
-2. **PSL Compiler**: Strict parser, duplicate-key detector, AST builder, Type Checker, and Semantic Validator [cite: 4].
-3. **FIR (Financial Intermediate Representation)**: Versioned, canonical, pricing-agnostic contract representation with cryptographic content hashing [cite: 4].
-4. **Financial Execution Runtime**: Event-driven state machine for cashflows and contract lifecycle management [cite: 4].
-5. **Quantitative Engines**: Monte Carlo simulation, QuantLib pricing, and risk analytics [cite: 4].
+FINKERNEL is a software infrastructure to specify, validate, compile, execute and value structured financial products.
+
+## Architecture
+
+1. **PSL** (Financial Product Specification Language): declarative, typed YAML specifications.
+2. **PSL Compiler**: strict parser (duplicate keys, aliases and YAML 1.1 coercions rejected), typed AST,
+   type checker, semantic and contractual validators, normalizer, structured diagnostics (code, severity, path, line/column).
+3. **FIR** (Financial Intermediate Representation): versioned, canonical, pricing-agnostic contract with a SHA-256
+   `contract_hash`; valuation and risk configurations have their own hashes; provenance is recorded but never hashed.
+4. **Financial Execution Runtime**, 5. **Quantitative engines**: not implemented yet (see `docs/CHANGES.md`).
+
+## Quick start
+
+```bash
+pip install -e ".[dev]"      # compiler only needs pydantic + PyYAML
+pytest
+python scripts/run_demo.py
+```
+
+```python
+from finkernel.psl.compiler.compiler import PSLCompiler
+
+result = PSLCompiler().compile(open("examples/phoenix_autocall_worst_of/phoenix_autocall.yaml").read())
+for d in result.diagnostics:
+    print(d.severity.value, d.format())
+if result.success:
+    print(result.fir.contract_hash)
+```
+
+Optional extras: `.[quant]` (numpy, scipy, QuantLib), `.[api]` (FastAPI, uvicorn).

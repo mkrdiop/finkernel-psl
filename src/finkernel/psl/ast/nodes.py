@@ -1,47 +1,118 @@
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel
+"""AST typé du PSL (blueprint §4.2).
+
+L'AST représente ce qui a été écrit, avec des types stricts; il n'est pas la
+représentation financière normalisée (c'est le rôle de la FIR).
+"""
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, ConfigDict
+
+from finkernel.psl.types.financial_types import (
+    Aggregation, BarrierObservation, BusinessDayConvention, CalendarId, ComparisonOperator,
+    ComponentType, Currency, Frequency, LagUnit, RiskMeasure, UnderlyingType, UnpaidCouponPolicy,
+)
+
 
 class ASTNode(BaseModel):
-    pass
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
 
 class ProductDeclaration(ASTNode):
     id: str
     name: str
     category: str
     subtype: str
-    currency: str
+    currency: Currency
+
 
 class NotionalNode(ASTNode):
-    amount: float
-    currency: str
+    amount: Decimal
+    currency: Currency
+
 
 class SettlementNode(ASTNode):
-    currency: str
+    currency: Currency
     payment_lag: int
-    payment_lag_unit: str
+    payment_lag_unit: LagUnit
+
 
 class ContractDeclaration(ASTNode):
     notional: NotionalNode
-    inception_date: str
-    maturity_date: str
+    inception_date: date
+    maturity_date: date
     settlement: SettlementNode
+
+
+class MarketIdentifier(ASTNode):
+    scheme: str
+    value: str
+
 
 class UnderlyingDeclaration(ASTNode):
     id: str
-    type: str
+    type: UnderlyingType
     name: str
-    currency: str
-    market_identifier: Optional[Dict[str, str]] = None
+    currency: Currency
+    market_identifier: Optional[MarketIdentifier] = None
+
 
 class ReferenceAggregationNode(ASTNode):
-    aggregation: str
+    aggregation: Aggregation
     underlyings: List[str]
     performance: Optional[Dict[str, str]] = None
 
-class PayoffComponentNode(ASTNode):
+
+class ObservationSchedule(ASTNode):
+    frequency: Frequency
+    first_observation: date
+    calendar: CalendarId
+    business_day_convention: BusinessDayConvention
+
+
+class ScheduleDeclaration(ASTNode):
+    observation_schedule: ObservationSchedule
+
+
+class ConditionExpression(ASTNode):
+    reference: str
+    operator: ComparisonOperator
+    threshold: Decimal
+
+
+class MemoryNode(ASTNode):
+    enabled: bool
+    unpaid_coupon: Optional[UnpaidCouponPolicy] = None
+
+
+class MemoryCouponComponent(ASTNode):
     id: str
-    type: str
-    raw_config: Dict[str, Any]
+    type: ComponentType = ComponentType.MEMORY_COUPON
+    annual_rate: Decimal
+    condition: ConditionExpression
+    memory: Optional[MemoryNode] = None
+
+
+class AutocallComponent(ASTNode):
+    id: str
+    type: ComponentType = ComponentType.AUTOCALL
+    start_observation: int
+    trigger: ConditionExpression
+    terminate_product: bool
+
+
+class CapitalProtectionComponent(ASTNode):
+    id: str
+    type: ComponentType = ComponentType.CONDITIONAL_CAPITAL_PROTECTION
+    barrier_level: Decimal
+    observation: BarrierObservation
+
+
+PayoffComponent = Union[MemoryCouponComponent, AutocallComponent, CapitalProtectionComponent]
+
 
 class PSLDocumentAST(ASTNode):
     psl_version: str
@@ -49,8 +120,8 @@ class PSLDocumentAST(ASTNode):
     contract: ContractDeclaration
     underlyings: List[UnderlyingDeclaration]
     reference: ReferenceAggregationNode
-    schedule: Dict[str, Any]
-    payoff_components: List[PayoffComponentNode]
-    valuation: Dict[str, Any]
-    risk: Dict[str, Any]
+    schedule: ScheduleDeclaration
+    payoff_components: List[PayoffComponent]
+    valuation: Optional[Dict[str, Any]] = None
+    risk_measures: List[RiskMeasure] = []
     metadata: Optional[Dict[str, Any]] = None

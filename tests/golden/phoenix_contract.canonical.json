@@ -1,0 +1,109 @@
+{
+  "components": [
+    {
+      "id": "coupon",
+      "kind": "MEMORY_COUPON",
+      "params": {
+        "annual_rate": "0.1",
+        "condition": {
+          "operator": "GTE",
+          "reference": "worst_of_performance",
+          "threshold": "0.7"
+        },
+        "memory": {
+          "enabled": true,
+          "unpaid_coupon": "accumulate"
+        }
+      }
+    },
+    {
+      "id": "autocall",
+      "kind": "AUTOCALL",
+      "params": {
+        "start_observation": 2,
+        "terminate_product": true,
+        "trigger": {
+          "operator": "GTE",
+          "reference": "worst_of_performance",
+          "threshold": "1"
+        }
+      }
+    },
+    {
+      "id": "capital_redemption",
+      "kind": "CONDITIONAL_CAPITAL_PROTECTION",
+      "params": {
+        "barrier_level": "0.6",
+        "observation": "maturity"
+      }
+    }
+  ],
+  "fir_version": "1.0",
+  "observation_schedule": {
+    "business_day_convention": "modified_following",
+    "calendar": "TARGET",
+    "first_observation": "2027-04-15",
+    "frequency": "quarterly"
+  },
+  "product": {
+    "category": "structured_product",
+    "currency": "EUR",
+    "id": "FK-PHOENIX-001",
+    "name": "Phoenix Autocallable Worst-of",
+    "subtype": "phoenix_autocallable"
+  },
+  "reference": {
+    "aggregation": "WORST_OF",
+    "performance": null,
+    "underlyings": [
+      "NKY",
+      "SPX",
+      "SX5E"
+    ]
+  },
+  "terms": {
+    "inception_date": "2027-01-15",
+    "maturity_date": "2032-01-15",
+    "notional": {
+      "amount": "100000",
+      "currency": "EUR"
+    },
+    "settlement": {
+      "currency": "EUR",
+      "payment_lag": 3,
+      "payment_lag_unit": "business_days"
+    }
+  },
+  "underlyings": [
+    {
+      "currency": "JPY",
+      "id": "NKY",
+      "market_identifier": {
+        "scheme": "INDEX",
+        "value": "NKY"
+      },
+      "name": "Nikkei 225",
+      "type": "equity_index"
+    },
+    {
+      "currency": "USD",
+      "id": "SPX",
+      "market_identifier": {
+        "scheme": "INDEX",
+        "value": "SPX"
+      },
+      "name": "S&P 500",
+      "type": "equity_index"
+    },
+    {
+      "currency": "EUR",
+      "id": "SX5E",
+      "market_identifier": {
+        "scheme": "ISIN",
+        "value": "EU0009658145"
+      },
+      "name": "EURO STOXX 50",
+      "type": "equity_index"
+    }
+  ]
+}
