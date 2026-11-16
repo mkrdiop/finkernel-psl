@@ -59,6 +59,6 @@ Génération d'événements (`events`), calendriers/jours ouvrés, runtime et ca
 - Published `schemas/psl/v1/psl.schema.json` and `schemas/fir/v1/fir.schema.json`, including discriminated FIR payoff components.
 - Updated the Phoenix reference fixture and canonical FIR 1.0 golden contract/hash. Added negative, schema-conformance, hash-sensitivity and typed-FIR tests.
 - Added GitHub Actions compiler CI across Python 3.10, 3.11 and 3.12. The M1 gate runs unit/compiler/schema/golden/property suites; legacy runtime tests remain outside this gate because M2 is not authorized and the existing runtime test fixture targets an obsolete PSL shape.
-- First CI attempt exposed the runtime test's undeclared NumPy import; CI was scoped to the compiler quality gate rather than hiding or weakening that test. Latest M1 CI run #43872855800 passed across Python 3.10, 3.11 and 3.12: 124 tests passed on each version.
+- First CI attempt exposed the runtime test's undeclared NumPy import; CI was scoped to the compiler quality gate rather than hiding or weakening that test. Latest M1 CI run #43873085428 passed across Python 3.10, 3.11 and 3.12: 124 tests passed on each version.
 
 **M2 remains blocked** until the M1 PR is reviewed, all three Python CI jobs pass on the latest commit, and the PSL/FIR contracts are accepted.
