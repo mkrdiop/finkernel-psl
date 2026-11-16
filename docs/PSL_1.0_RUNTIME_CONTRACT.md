@@ -191,7 +191,7 @@ A coupon evaluation is performed exactly once at its scheduled observation. It u
 For a memory coupon:
 - If the coupon condition is satisfied, the coupon obligation is the current period's accrued coupon plus all previously accumulated unpaid coupon memory. The memory balance is reset to zero once that obligation is created.
 - If the condition is not satisfied, the current period's accrued coupon is added to unpaid coupon memory.
-- Memory arithmetic uses exact decimal values. It MUST NOT round intermediate values because PSL 1.0 does not define a rounding stage. A contract is execution-eligible only when the runtime can prove that every coupon, memory and principal amount on the execution path is already exactly representable at the declared precision, so no rounding operation is needed. If any relevant amount would require rounding, or exact representability cannot be established, execution MUST fail closed under §8.
+- Memory arithmetic uses exact decimal values. It MUST NOT round intermediate values because PSL 1.0 does not define a rounding stage. Coupon and memory amounts are execution-eligible only when every relevant amount is exactly representable at the declared coupon precision, so no rounding operation is needed. Principal amounts are governed separately: FIR 1.0 has no principal rounding fields, and coupon precision MUST NOT be reused for principal. If a principal amount requires a rounding operation, execution MUST fail closed under §8.
 - Coupon evaluation/payment obligation creation MUST NOT occur more than once for the same component and observation index.
 
 The same-date priority permutation determines coupon/autocall interaction:
