@@ -169,8 +169,8 @@ def order_events(events: list[dict], same_date_priority: list[str]) -> list[dict
     def key(event):
         phase = PHASE[event["kind"]]
         component_rank = rank.get(event.get("component"), -1)
-        return (event["date"], phase, component_rank, event.get("component_id", ""),
-                event.get("event_id", ""))
+        return (event["date"], phase, event.get("observation_index", -1), component_rank,
+                event.get("component_id", ""), event.get("event_id", ""))
     return sorted(events, key=key)
 
 
