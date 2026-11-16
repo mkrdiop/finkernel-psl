@@ -64,7 +64,6 @@ class UnderlyingDeclaration(ASTNode):
 class ReferenceAggregationNode(ASTNode):
     aggregation: Aggregation
     underlyings: List[str]
-    performance: Optional[Dict[str, str]] = None
 
 
 class ObservationSchedule(ASTNode):
