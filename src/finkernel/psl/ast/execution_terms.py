@@ -1,6 +1,7 @@
 """Typed, fail-closed execution terms required for executable PSL 1.0 contracts."""
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 from typing import Literal, Optional
@@ -9,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 class ExecutionNode(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
 
 
 class PerformanceDefinition(ExecutionNode):
@@ -22,6 +23,18 @@ class PerformanceDefinition(ExecutionNode):
     fx_fixing_source: Optional[str] = None
     fx_quote_convention: Optional[Literal["product_per_underlying", "underlying_per_product"]] = None
     quanto_rate: Optional[Decimal] = None
+
+    @field_validator("initial_fixing_date", "fx_fixing_date", mode="before")
+    @classmethod
+    def iso_calendar_date(cls, value):
+        if value is None or isinstance(value, date):
+            return value
+        if not isinstance(value, str) or not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", value):
+            raise ValueError("date must use exact YYYY-MM-DD format")
+        try:
+            return date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("date must be a valid ISO calendar date") from exc
 
     @field_validator("initial_fixing_source", "fx_fixing_source")
     @classmethod
@@ -126,6 +139,13 @@ class ExecutionTerms(ExecutionNode):
     settlement_business_day_convention: Literal[
         "following", "modified_following", "preceding", "modified_preceding", "unadjusted"
     ]
+
+    @field_validator("same_date_priority", mode="before")
+    @classmethod
+    def normalize_priority_sequence(cls, value):
+        if isinstance(value, list):
+            return tuple(value)
+        return value
 
     @model_validator(mode="after")
     def validate_event_priority(self):
