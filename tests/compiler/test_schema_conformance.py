@@ -43,3 +43,35 @@ def test_fir_schema_accepts_decimal_redemption_fractions_and_restricts_settlemen
     golden["execution_terms"]["settlement_calendar"] = "UNKNOWN"
     errors = list(validator.iter_errors(golden))
     assert any("settlement_calendar" in str(error.absolute_path) for error in errors)
+
+
+
+def test_fir_schema_enforces_canonical_decimal_ranges():
+    schema = load_schema("schemas/fir/v1/fir.schema.json")
+    golden = json.loads((ROOT / "tests/golden/phoenix_fir_v1.json").read_text(encoding="utf-8"))
+    validator = Draft202012Validator(schema)
+
+    invalid_cases = [
+        (("terms", "notional", "amount"), "0"),
+        (("terms", "notional", "amount"), "-1"),
+        (("components", 0, "params", "annual_rate"), "1.01"),
+        (("components", 0, "params", "annual_rate"), "-0.01"),
+        (("components", 0, "params", "condition", "threshold"), "2.01"),
+        (("components", 2, "params", "barrier_level"), "0"),
+        (("execution_terms", "autocall_redemption", "principal_fraction"), "0"),
+    ]
+    for path, value in invalid_cases:
+        candidate = json.loads(json.dumps(golden))
+        target = candidate
+        for key in path[:-1]:
+            target = target[key]
+        target[path[-1]] = value
+        assert list(validator.iter_errors(candidate)), (path, value)
+
+    candidate = json.loads(json.dumps(golden))
+    candidate["execution_terms"]["performance"].update({
+        "fx_treatment": "quanto",
+        "quanto_rate": "0",
+        "quanto_quote_convention": "product_per_underlying",
+    })
+    assert list(validator.iter_errors(candidate))
