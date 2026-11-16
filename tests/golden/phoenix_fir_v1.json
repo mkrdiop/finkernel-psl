@@ -108,7 +108,7 @@
   "execution_terms": {
     "performance": {
       "initial_fixing_date": "2027-01-14",
-      "initial_fixing_source": "contractual_initial_valuation",
+      "initial_fixing_source": "initial_fixing_official_close",
       "price_field": "official_close",
       "formula": "price_over_initial",
       "fx_treatment": "local_currency",
