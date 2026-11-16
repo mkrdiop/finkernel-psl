@@ -392,9 +392,13 @@ class RuntimeContractVectors(unittest.TestCase):
 
     def test_same_date_priority_is_applied_to_event_queue(self):
         for vector in VECTORS["event_sort_vectors"]:
-            with self.subTest(vector=vector["id"]):
-                actual = order_events(vector["events"], vector["priority"])
-                self.assertEqual([item["event_id"] for item in actual], vector["expected"])
+            with self.subTest(vector=vector["id"], rule=vector["rule"]):
+                if isinstance(vector["expected"], str) and vector["expected"].startswith("REJECT"):
+                    with self.assertRaisesRegex(ContractError, vector["expected"]):
+                        order_events(vector["events"], vector["priority"])
+                else:
+                    actual = order_events(vector["events"], vector["priority"])
+                    self.assertEqual([item["event_id"] for item in actual], vector["expected"])
 
     def test_all_six_priorities_execute_through_reducer(self):
         vectors = VECTORS["event_vectors"]
