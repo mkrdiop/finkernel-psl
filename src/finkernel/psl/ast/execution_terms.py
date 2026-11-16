@@ -19,12 +19,13 @@ class PerformanceDefinition(ExecutionNode):
     price_field: Literal["close", "official_close", "adjusted_close"]
     formula: Literal["price_over_initial"]
     fx_treatment: Literal["local_currency", "convert_to_product_currency", "quanto"]
-    fx_fixing_date: Optional[date] = None
+    fx_fixing_date_rule: Optional[Literal["initial_and_observation_fixings"]] = None
     fx_fixing_source: Optional[str] = None
     fx_quote_convention: Optional[Literal["product_per_underlying", "underlying_per_product"]] = None
     quanto_rate: Optional[Decimal] = None
+    quanto_quote_convention: Optional[Literal["product_per_underlying", "underlying_per_product"]] = None
 
-    @field_validator("initial_fixing_date", "fx_fixing_date", mode="before")
+    @field_validator("initial_fixing_date", mode="before")
     @classmethod
     def iso_calendar_date(cls, value):
         if value is None or isinstance(value, date):
@@ -61,15 +62,20 @@ class PerformanceDefinition(ExecutionNode):
 
     @model_validator(mode="after")
     def require_fx_terms(self):
-        if self.fx_treatment in ("convert_to_product_currency", "quanto"):
-            if not all((self.fx_fixing_date, self.fx_fixing_source, self.fx_quote_convention)):
-                raise ValueError("FX conversion/quanto requires fx_fixing_date, fx_fixing_source and fx_quote_convention")
-        if self.fx_treatment == "quanto" and self.quanto_rate is None:
-            raise ValueError("quanto requires an explicit quanto_rate")
-        if self.fx_treatment != "quanto" and self.quanto_rate is not None:
-            raise ValueError("quanto_rate is only valid for quanto treatment")
-        if self.fx_treatment == "local_currency" and any((self.fx_fixing_date, self.fx_fixing_source, self.fx_quote_convention)):
-            raise ValueError("FX fixing fields are forbidden when fx_treatment is local_currency")
+        fx_fields = (self.fx_fixing_date_rule, self.fx_fixing_source, self.fx_quote_convention)
+        quanto_fields = (self.quanto_rate, self.quanto_quote_convention)
+        if self.fx_treatment == "convert_to_product_currency":
+            if not all(fx_fields):
+                raise ValueError("FX conversion requires fixing-date rule, fixing source and quote convention")
+            if any(quanto_fields):
+                raise ValueError("quanto fields are forbidden for FX conversion")
+        elif self.fx_treatment == "quanto":
+            if not all(quanto_fields):
+                raise ValueError("quanto requires an explicit positive rate and quote convention")
+            if any(fx_fields):
+                raise ValueError("FX spot fixing fields are forbidden for quanto treatment")
+        elif any(fx_fields) or any(quanto_fields):
+            raise ValueError("FX and quanto fields are forbidden when fx_treatment is local_currency")
         return self
 
 
