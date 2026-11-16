@@ -7,6 +7,7 @@ from finkernel.core.diagnostics import DiagnosticBag
 from finkernel.psl.ast.nodes import (
     AutocallComponent, CapitalProtectionComponent, MemoryCouponComponent, PSLDocumentAST,
 )
+from finkernel.psl.types.financial_types import Aggregation
 from finkernel.psl.validation import rules
 from finkernel.psl.validation.schedule_grid import observation_dates
 
@@ -19,6 +20,12 @@ def validate_contract(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
                   f"No contractual rules are registered for subtype '{subtype}'; executable completeness cannot be established.",
                   "product.subtype")
         return
+
+    if subtype == "phoenix_autocallable" and ast.reference.aggregation != Aggregation.WORST_OF:
+        bag.error("E-PHOENIX-AGGREGATION",
+                  "PSL 1.0 Phoenix maturity redemption is defined on worst_of_performance; "
+                  "phoenix_autocallable therefore requires WORST_OF aggregation.",
+                  "reference.aggregation")
 
     counts = Counter(c.type for c in ast.payoff_components)
     for ctype in required:
