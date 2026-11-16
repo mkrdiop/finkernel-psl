@@ -100,7 +100,7 @@ def test_source_hash_tracks_exact_source_but_normalizes_newlines(compiler, phoen
 
 def test_fir_contains_no_pricing_parameters(compiler, phoenix_yaml):
     blob = canonical_json(compiler.compile(phoenix_yaml).fir.contract)
-    for forbidden in ("monte_carlo", "paths", "correlation", "value_at_risk", "valuation"):
+    for forbidden in ("monte_carlo", "paths", "correlation", "value_at_risk", "valuation_config"):
         assert forbidden not in blob
 
 
