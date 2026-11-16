@@ -28,3 +28,18 @@ def test_phoenix_fir_golden_conforms_to_fir_1_schema():
     golden = json.loads((ROOT / "tests/golden/phoenix_fir_v1.json").read_text(encoding="utf-8"))
     errors = list(Draft202012Validator(schema).iter_errors(golden))
     assert not errors, [error.message for error in errors]
+
+
+
+def test_fir_schema_accepts_decimal_redemption_fractions_and_restricts_settlement():
+    schema = load_schema("schemas/fir/v1/fir.schema.json")
+    golden = json.loads((ROOT / "tests/golden/phoenix_fir_v1.json").read_text(encoding="utf-8"))
+    golden["execution_terms"]["autocall_redemption"]["principal_fraction"] = "0.95"
+    golden["execution_terms"]["maturity_redemption"]["above_barrier_principal_fraction"] = "0.95"
+    validator = Draft202012Validator(schema)
+    errors = list(validator.iter_errors(golden))
+    assert not errors, [error.message for error in errors]
+
+    golden["execution_terms"]["settlement_calendar"] = "UNKNOWN"
+    errors = list(validator.iter_errors(golden))
+    assert any("settlement_calendar" in str(error.absolute_path) for error in errors)
