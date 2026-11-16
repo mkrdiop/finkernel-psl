@@ -35,7 +35,7 @@ The top-level mapping has the following fields:
 | `payoff` | mapping | yes | Ordered contractual payoff components. |
 | `valuation` | mapping | no | Explicit model configuration; not part of contract semantics. |
 | `risk` | mapping | no | Requested risk measures; not part of contract semantics. |
-| `metadata` | mapping | no | Non-contractual descriptive metadata. |
+| `execution` | typed mapping | yes | Fixing, performance, FX, coupon, event-order, redemption and settlement semantics. |\n| `metadata` | mapping | no | Non-contractual descriptive metadata. |
 
 Unknown fields are errors at every closed-schema mapping. Open mappings (`valuation`, `metadata`, and the explicitly extensible reference-performance details) are versioned extension points; their keys and values MUST still be validated by their owning schema before execution.
 
@@ -103,7 +103,7 @@ Underlying identifiers MUST be unique. Market identifier omission means no exter
 |---|---|---:|
 | `reference.aggregation` | `WORST_OF` or `BEST_OF` | yes |
 | `reference.underlyings` | non-empty sequence of declared underlying IDs | yes |
-| `reference.performance` | performance definition | yes for executable contract |
+
 
 Basket IDs MUST be declared, unique within the basket and ordered only where the selected aggregation semantics require order. Every declared underlying not used in the basket is diagnostic-worthy.
 
@@ -273,7 +273,7 @@ The machine-readable structural schema is `schemas/psl/v1/psl.schema.json`. Comp
 - `formula`: `price_over_initial_minus_one`;
 - `fx_treatment`: `local_currency`, `convert_to_product_currency` or `quanto`.
 
-For conversion or quanto, `fx_fixing_date`, `fx_fixing_source` and `fx_quote_convention` are all mandatory. Quote convention is `product_per_underlying` or `underlying_per_product`. FX fixing fields are forbidden for `local_currency`. Local-currency performance is an explicit choice: each underlying's return is calculated in its own denomination before basket aggregation. The compiler does not infer an FX conversion.
+For conversion or quanto, `fx_fixing_date`, `fx_fixing_source` and `fx_quote_convention` are all mandatory. Quanto additionally requires an explicit positive `quanto_rate`. Quote convention is `product_per_underlying` or `underlying_per_product`. FX fixing fields are forbidden for `local_currency`. Local-currency performance is an explicit choice: each underlying's return is calculated in its own denomination before basket aggregation. The compiler does not infer an FX conversion.
 
 `execution.coupon` requires day count (`ACT_360`, `ACT_365F`, `30_360`), accrual start (`inception_date` or `previous_observation`), accrual end and payment date rules (`observation_date` in PSL 1.0), stub rule (`short_first`, `long_first`, `short_last`, `long_last`), rounding precision [0, 8] and rounding mode (`half_even`, `half_up`, `down`).
 
