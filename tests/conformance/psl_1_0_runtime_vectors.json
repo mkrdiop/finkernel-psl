@@ -1,0 +1,384 @@
+{
+  "contract_id": "FINKERNEL-PSL-1.0-RUNTIME",
+  "vector_set_version": "1.0.0",
+  "purpose": "Executable specification vectors. These are normative examples for schedule, event ordering, settlement, fixing admission, lifecycle, idempotency and execution-eligibility rules; they do not implement the production runtime.",
+  "date_vectors": [
+    {
+      "id": "SCH-EOM-001",
+      "rule": "R-SCH-EOM",
+      "kind": "monthly_anchor_eom",
+      "anchor": "2024-01-31",
+      "count": 5,
+      "expected": [
+        "2024-01-31",
+        "2024-02-29",
+        "2024-03-31",
+        "2024-04-30",
+        "2024-05-31"
+      ]
+    },
+    {
+      "id": "SCH-NON-EOM-001",
+      "rule": "R-SCH-EOM",
+      "kind": "monthly_anchor_day",
+      "anchor": "2024-01-30",
+      "count": 5,
+      "expected": [
+        "2024-01-30",
+        "2024-02-29",
+        "2024-03-30",
+        "2024-04-30",
+        "2024-05-30"
+      ]
+    },
+    {
+      "id": "SCH-COLLISION-001",
+      "rule": "R-SCH-COLLISION",
+      "kind": "adjusted_date_collision",
+      "nominal": [
+        "2024-06-01",
+        "2024-06-02"
+      ],
+      "adjusted": [
+        "2024-06-03",
+        "2024-06-03"
+      ],
+      "expected": "REJECT_SCHEDULE_COLLISION"
+    },
+    {
+      "id": "SCH-RANGE-001",
+      "rule": "R-CALENDAR-RANGE",
+      "kind": "calendar_out_of_range",
+      "date": "2035-01-01",
+      "supported_range": [
+        "2020-01-01",
+        "2030-12-31"
+      ],
+      "expected": "REJECT_CALENDAR_OUT_OF_RANGE"
+    }
+  ],
+  "settlement_vectors": [
+    {
+      "id": "SET-BD-001",
+      "rule": "R-SETTLEMENT-LAG",
+      "kind": "business_day_lag",
+      "anchor": "2024-05-24",
+      "lag": 2,
+      "holidays": [
+        "2024-05-27"
+      ],
+      "weekend": [
+        5,
+        6
+      ],
+      "expected_lag_date": "2024-05-29",
+      "convention": "following",
+      "expected_payment_date": "2024-05-29"
+    },
+    {
+      "id": "SET-ZERO-001",
+      "rule": "R-SETTLEMENT-LAG",
+      "kind": "zero_lag",
+      "anchor": "2024-05-25",
+      "lag": 0,
+      "unit": "calendar_days",
+      "weekend": [
+        5,
+        6
+      ],
+      "convention": "following",
+      "expected_payment_date": "2024-05-27"
+    }
+  ],
+  "fixing_vectors": [
+    {
+      "id": "FIX-EXACT-001",
+      "rule": "R-FIXING-CARDINALITY",
+      "kind": "exactly_one",
+      "matching_records": 1,
+      "expected": "ACCEPT"
+    },
+    {
+      "id": "FIX-MISSING-001",
+      "rule": "R-FIXING-CARDINALITY",
+      "kind": "missing",
+      "matching_records": 0,
+      "expected": "REJECT_MISSING_FIXING"
+    },
+    {
+      "id": "FIX-DUPLICATE-001",
+      "rule": "R-FIXING-CARDINALITY",
+      "kind": "duplicate_equal_values",
+      "matching_records": 2,
+      "values": [
+        "100.00",
+        "100.00"
+      ],
+      "expected": "REJECT_DUPLICATE_FIXING"
+    },
+    {
+      "id": "FIX-CONFLICT-001",
+      "rule": "R-FIXING-CARDINALITY",
+      "kind": "conflicting_values",
+      "matching_records": 2,
+      "values": [
+        "100.00",
+        "99.50"
+      ],
+      "expected": "REJECT_DUPLICATE_FIXING"
+    },
+    {
+      "id": "FIX-PARTIAL-BASKET-001",
+      "rule": "R-FIXING-BASKET",
+      "kind": "partial_basket",
+      "required_underlyings": [
+        "A",
+        "B",
+        "C"
+      ],
+      "present_underlyings": [
+        "A",
+        "B"
+      ],
+      "expected": "REJECT_INCOMPLETE_BASKET"
+    },
+    {
+      "id": "FIX-NO-CARRY-001",
+      "rule": "R-FIXING-FALLBACK",
+      "kind": "prior_date_only",
+      "requested_date": "2024-06-03",
+      "available_dates": [
+        "2024-05-31"
+      ],
+      "expected": "REJECT_MISSING_FIXING"
+    }
+  ],
+  "event_order_vectors": [
+    {
+      "id": "EVT-PHASE-001",
+      "rule": "R-EVENT-PHASE",
+      "kind": "phase_order",
+      "input": [
+        "COUPON_EVALUATION",
+        "CASHFLOW_SETTLEMENT",
+        "OBSERVATION_FIXING",
+        "AUTOCALL_EVALUATION"
+      ],
+      "expected": [
+        "OBSERVATION_FIXING",
+        "COUPON_EVALUATION",
+        "AUTOCALL_EVALUATION",
+        "CASHFLOW_SETTLEMENT"
+      ]
+    },
+    {
+      "id": "EVT-PRIORITY-001",
+      "rule": "R-SAME-DATE-PRIORITY",
+      "kind": "all_priority_permutations",
+      "permutations": [
+        [
+          "coupon",
+          "autocall",
+          "capital_redemption"
+        ],
+        [
+          "coupon",
+          "capital_redemption",
+          "autocall"
+        ],
+        [
+          "autocall",
+          "coupon",
+          "capital_redemption"
+        ],
+        [
+          "autocall",
+          "capital_redemption",
+          "coupon"
+        ],
+        [
+          "capital_redemption",
+          "coupon",
+          "autocall"
+        ],
+        [
+          "capital_redemption",
+          "autocall",
+          "coupon"
+        ]
+      ],
+      "expected_count": 6
+    },
+    {
+      "id": "EVT-TERMINAL-001",
+      "rule": "R-TERMINAL-SHORT-CIRCUIT",
+      "kind": "autocall_before_coupon",
+      "priority": [
+        "autocall",
+        "coupon",
+        "capital_redemption"
+      ],
+      "autocall_triggers": true,
+      "expected_processed": [
+        "AUTOCALL_EVALUATION",
+        "AUTOCALL_REDEMPTION"
+      ],
+      "expected_state": "TERMINATED_AUTOCALL"
+    },
+    {
+      "id": "EVT-COUPON-FIRST-001",
+      "rule": "R-COUPON-MEMORY-ORDER",
+      "kind": "coupon_before_autocall",
+      "priority": [
+        "coupon",
+        "autocall",
+        "capital_redemption"
+      ],
+      "coupon_eligible": true,
+      "memory_before": "5.00",
+      "current_coupon": "2.00",
+      "autocall_triggers": true,
+      "expected_coupon_obligation": "7.00",
+      "expected_memory_after_coupon": "0",
+      "expected_state": "TERMINATED_AUTOCALL"
+    },
+    {
+      "id": "EVT-AUTOCALL-FIRST-001",
+      "rule": "R-COUPON-MEMORY-ORDER",
+      "kind": "autocall_before_coupon",
+      "priority": [
+        "autocall",
+        "coupon",
+        "capital_redemption"
+      ],
+      "coupon_eligible": true,
+      "memory_before": "5.00",
+      "current_coupon": "2.00",
+      "autocall_triggers": true,
+      "expected_coupon_obligation": "0",
+      "expected_memory_after_coupon": "5.00",
+      "expected_state": "TERMINATED_AUTOCALL"
+    }
+  ],
+  "lifecycle_vectors": [
+    {
+      "id": "LIFE-PENDING-001",
+      "rule": "R-LIFECYCLE",
+      "from": "PENDING",
+      "condition": "preflight_pass",
+      "expected": "ACTIVE"
+    },
+    {
+      "id": "LIFE-AUTOCALL-001",
+      "rule": "R-LIFECYCLE",
+      "from": "ACTIVE",
+      "condition": "autocall_redemption",
+      "expected": "TERMINATED_AUTOCALL"
+    },
+    {
+      "id": "LIFE-MATURITY-001",
+      "rule": "R-LIFECYCLE",
+      "from": "ACTIVE",
+      "condition": "maturity_redemption",
+      "expected": "MATURED"
+    },
+    {
+      "id": "LIFE-FAIL-001",
+      "rule": "R-LIFECYCLE",
+      "from": "ACTIVE",
+      "condition": "technical_error",
+      "expected": "FAILED"
+    },
+    {
+      "id": "LIFE-TERMINAL-001",
+      "rule": "R-LIFECYCLE",
+      "from": "TERMINATED_AUTOCALL",
+      "condition": "contractual_event",
+      "expected": "REJECT_POST_TERMINAL"
+    },
+    {
+      "id": "LIFE-FAILED-001",
+      "rule": "R-LIFECYCLE",
+      "from": "FAILED",
+      "condition": "any_event",
+      "expected": "REJECT_FAILED_RUN"
+    }
+  ],
+  "idempotency_vectors": [
+    {
+      "id": "IDEMP-REPLAY-001",
+      "rule": "R-IDEMPOTENCY",
+      "kind": "same_id_same_content",
+      "same_event_id": true,
+      "same_canonical_content": true,
+      "expected": "IDEMPOTENT_NOOP"
+    },
+    {
+      "id": "IDEMP-COLLISION-001",
+      "rule": "R-IDEMPOTENCY",
+      "kind": "same_id_different_content",
+      "same_event_id": true,
+      "same_canonical_content": false,
+      "expected": "REJECT_EVENT_ID_COLLISION"
+    },
+    {
+      "id": "IDEMP-DUP-ACTION-001",
+      "rule": "R-IDEMPOTENCY",
+      "kind": "different_id_same_component_observation_action",
+      "same_event_id": false,
+      "same_action": true,
+      "expected": "REJECT_DUPLICATE_ACTION"
+    }
+  ],
+  "eligibility_vectors": [
+    {
+      "id": "ELIG-30-360-001",
+      "rule": "R-PSL1-ELIGIBILITY",
+      "feature": "30_360_variant_unspecified",
+      "expected": "REJECT_PSL1_EXECUTION_INELIGIBLE",
+      "future": "PSL 1.1"
+    },
+    {
+      "id": "ELIG-STUB-001",
+      "rule": "R-PSL1-ELIGIBILITY",
+      "feature": "stub_construction_required",
+      "expected": "REJECT_PSL1_EXECUTION_INELIGIBLE",
+      "future": "PSL 1.1"
+    },
+    {
+      "id": "ELIG-ROUNDING-001",
+      "rule": "R-PSL1-ELIGIBILITY",
+      "feature": "rounding_stage_economically_material",
+      "expected": "REJECT_PSL1_EXECUTION_INELIGIBLE",
+      "future": "PSL 1.1"
+    },
+    {
+      "id": "ELIG-FIX-CAL-001",
+      "rule": "R-PSL1-ELIGIBILITY",
+      "feature": "independent_fixing_calendar_required",
+      "expected": "REJECT_PSL1_EXECUTION_INELIGIBLE",
+      "future": "PSL 1.1"
+    },
+    {
+      "id": "ELIG-QUANTO-001",
+      "rule": "R-PSL1-ELIGIBILITY",
+      "feature": "per_currency_quanto_required",
+      "expected": "REJECT_PSL1_EXECUTION_INELIGIBLE",
+      "future": "PSL 1.1"
+    },
+    {
+      "id": "ELIG-DISRUPTION-001",
+      "rule": "R-PSL1-ELIGIBILITY",
+      "feature": "contractual_fixing_fallback_required",
+      "expected": "REJECT_PSL1_EXECUTION_INELIGIBLE",
+      "future": "PSL 1.1"
+    },
+    {
+      "id": "ELIG-EARLY-TERM-001",
+      "rule": "R-PSL1-ELIGIBILITY",
+      "feature": "discretionary_early_termination",
+      "expected": "REJECT_PSL1_EXECUTION_INELIGIBLE",
+      "future": "PSL 1.1"
+    }
+  ]
+}
