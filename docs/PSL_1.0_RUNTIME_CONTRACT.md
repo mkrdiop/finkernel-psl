@@ -331,9 +331,9 @@ SFI-11 is acceptable only when all of the following are true:
 4. Schedule vectors cover monthly, quarterly, semi-annual and annual frequencies, EOM/non-EOM anchoring, adjusted-date collisions and calendar range failures.
 5. Calendar vectors execute following, preceding, modified-following, modified-preceding and unadjusted conventions, plus missing-calendar and content-hash-mismatch rejection.
 6. Calendar-role vectors prove that observation and settlement calendars are resolved independently; settlement vectors cover calendar-day and business-day lags, zero lag and post-lag business-day adjustment.
-7. Fixing vectors validate the complete `(underlying, date, price_field, source)` key, exact cardinality (including equal-value duplicates), key-dimension mismatches and all-or-nothing basket admission.
-8. Event vectors execute mandatory phase ordering, the supplied same-date priority permutation, all six permutations through the coupon-memory/autocall/capital-redemption reducer, terminal suppression and lifecycle transitions.
-9. Identity vectors execute canonical event-ID hashing, same-content replay, same-ID/different-content collision and duplicate-action rejection. Eligibility vectors execute every §8 predicate, including exact-rounding-equivalence and economically material rounding cases.
+7. Fixing vectors validate the complete `(underlying, date, price_field, source)` key, exact cardinality (including equal-value duplicates), key-dimension mismatches, initial-versus-scheduled fixing-date rules and all-or-nothing basket admission.
+8. Event vectors execute mandatory phase ordering, reject unknown event kinds, apply the supplied same-date priority permutation, execute all six permutations through the coupon-memory/autocall/capital-redemption reducer, and verify terminal suppression and lifecycle transitions.
+9. Identity vectors execute canonical event-ID hashing, same-content replay, same-ID/different-content collision and duplicate-action rejection. Provenance vectors verify canonical run provenance and that changing calendar/fixing input hashes changes the provenance identity. Eligibility vectors execute every §8 predicate, including coupon-stage and principal-rounding restrictions.
 10. Vector failures identify a stable vector ID and rule ID; every vector group is exercised by CI on Python 3.10, 3.11 and 3.12.
 11. The reference oracle is specification-only and MUST NOT contain or require production runtime implementation.
 12. The contract and vectors are linked from SFI-11 and CI.
