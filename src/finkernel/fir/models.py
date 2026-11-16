@@ -79,6 +79,7 @@ class FIRContract(FIRNode):
     reference: FIRReference
     observation_schedule: FIRObservationSchedule
     components: List[FIRComponent]
+    execution_terms: Dict[str, Any]
 
 
 class FIRProvenance(FIRNode):
