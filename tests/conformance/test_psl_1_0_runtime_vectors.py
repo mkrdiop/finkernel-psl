@@ -203,7 +203,7 @@ def reduce_same_date(vector: dict) -> dict:
             state = "TERMINATED_AUTOCALL"
         elif component == "capital_redemption" and vector["capital_redemption_triggers"]:
             processed.append("capital_redemption")
-            principal_obligation = Decimal("100")
+            principal_obligation = Decimal(vector["principal_amount"])
             state = "MATURED"
     return {
         "processed": processed, "state": state,
