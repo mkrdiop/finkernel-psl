@@ -2,7 +2,7 @@ name: Finkernel CI
 
 on:
   push:
-    branches: ["main", "m1/**"]
+    branches: ["main", "m1/**", "m2/**"]
   pull_request:
     branches: ["main"]
 
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   compiler-quality-gate:
-    name: Compiler quality gate (Python ${{ matrix.python-version }})
+    name: Compiler and specification quality gate (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -33,7 +33,10 @@ jobs:
         run: |
           python -m json.tool schemas/psl/v1/psl.schema.json > /dev/null
           python -m json.tool schemas/fir/v1/fir.schema.json > /dev/null
+          python -m json.tool tests/conformance/psl_1_0_runtime_vectors.json > /dev/null
       - name: Compile Python sources
         run: python -m compileall -q src tests
       - name: Run M1 compiler, schema, golden and property tests
         run: pytest -q tests/unit tests/compiler tests/golden tests/property
+      - name: Run PSL 1.0 runtime specification conformance vectors
+        run: pytest -q tests/conformance
