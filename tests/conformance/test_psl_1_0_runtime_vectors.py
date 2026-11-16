@@ -325,14 +325,15 @@ class RuntimeContractVectors(unittest.TestCase):
 
     def test_observation_and_settlement_calendars_are_independent(self):
         roles = VECTORS["calendar_roles"]
-        observation = validate_calendar(roles["observation"])
-        settlement = validate_calendar(roles["settlement"])
-        self.assertNotEqual(calendar_hash(roles["observation"]), calendar_hash(roles["settlement"]))
-        day = date.fromisoformat(roles["date"])
-        self.assertEqual(adjust_date(day, "following", observation).isoformat(),
-                         roles["observation_adjusted"])
-        self.assertEqual(adjust_date(day, "following", settlement).isoformat(),
-                         roles["settlement_adjusted"])
+        with self.subTest(vector=roles["id"], rule=roles["rule"]):
+            observation = validate_calendar(roles["observation"])
+            settlement = validate_calendar(roles["settlement"])
+            self.assertNotEqual(calendar_hash(roles["observation"]), calendar_hash(roles["settlement"]))
+            day = date.fromisoformat(roles["date"])
+            self.assertEqual(adjust_date(day, "following", observation).isoformat(),
+                             roles["observation_adjusted"])
+            self.assertEqual(adjust_date(day, "following", settlement).isoformat(),
+                             roles["settlement_adjusted"])
 
     def test_exact_fixing_key_and_basket_vectors(self):
         for vector in VECTORS["fixing_vectors"]:
@@ -401,7 +402,7 @@ class RuntimeContractVectors(unittest.TestCase):
         groups = ("schedule_vectors", "adjustment_vectors", "settlement_vectors",
                   "fixing_vectors", "event_vectors", "event_sort_vectors", "phase_vectors",
                   "lifecycle_vectors", "identity_vectors", "eligibility_vectors")
-        vectors = [item for group in groups for item in VECTORS[group]]
+        vectors = [item for group in groups for item in VECTORS[group]] + [VECTORS["calendar_roles"]]
         ids = [item["id"] for item in vectors]
         self.assertEqual(len(ids), len(set(ids)))
         self.assertTrue(all(item.get("rule") for item in vectors))
