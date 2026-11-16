@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from pydantic import ValidationError
 from typing import Any, Dict, Optional
 
 from finkernel.core.diagnostics import DiagnosticBag
+from finkernel.psl.ast.execution_terms import ExecutionTerms
 from finkernel.psl.ast.nodes import (
     AutocallComponent, CapitalProtectionComponent, ConditionExpression, ContractDeclaration,
     MarketIdentifier, MemoryCouponComponent, MemoryNode, NotionalNode, ObservationSchedule,
@@ -31,7 +33,7 @@ def build_ast(raw: Dict[str, Any], bag: DiagnosticBag) -> Optional[PSLDocumentAS
     tc = TypeChecker(bag)
     top = tc.fields(
         raw, "",
-        required=("psl_version", "product", "contract", "underlyings", "reference", "schedule", "payoff"),
+        required=("psl_version", "product", "contract", "underlyings", "reference", "schedule", "payoff", "execution"),
         optional=("valuation", "risk", "metadata"),
     )
     if top is None:
@@ -49,18 +51,19 @@ def build_ast(raw: Dict[str, Any], bag: DiagnosticBag) -> Optional[PSLDocumentAS
     reference = _reference(tc, top.get("reference", MISSING), "reference")
     schedule = _schedule(tc, top.get("schedule", MISSING), "schedule")
     components = _payoff(tc, top.get("payoff", MISSING), "payoff")
+    execution = _execution(tc, top.get("execution", MISSING), "execution")
 
     valuation = tc.free_mapping(top["valuation"], "valuation") if "valuation" in top else None
     metadata = tc.free_mapping(top["metadata"], "metadata") if "metadata" in top else None
     risk_measures = _risk(tc, top["risk"], "risk") if "risk" in top else []
 
-    if bag.has_errors or _none(psl_version, product, contract, underlyings, reference, schedule, components,
+    if bag.has_errors or _none(psl_version, product, contract, underlyings, reference, schedule, components, execution,
                                risk_measures):
         return None
 
     return PSLDocumentAST(
         psl_version=psl_version, product=product, contract=contract, underlyings=underlyings,
-        reference=reference, schedule=schedule, payoff_components=components, valuation=valuation,
+        reference=reference, schedule=schedule, payoff_components=components, execution=execution, valuation=valuation,
         risk_measures=risk_measures, metadata=metadata,
     )
 
@@ -299,6 +302,21 @@ def _capital(tc: TypeChecker, raw: Dict[str, Any], path: str) -> Optional[Capita
     if _none(id_, level, obs):
         return None
     return CapitalProtectionComponent(id=id_, barrier_level=level, observation=obs)
+
+
+
+def _execution(tc: TypeChecker, raw: Any, path: str) -> Optional[ExecutionTerms]:
+    mapping = tc.free_mapping(raw, path)
+    if mapping is None:
+        return None
+    try:
+        return ExecutionTerms.model_validate(mapping)
+    except ValidationError as exc:
+        for issue in exc.errors():
+            loc = ".".join(str(part) for part in issue.get("loc", ()))
+            diagnostic_path = f"{path}.{loc}" if loc else path
+            tc.bag.error("E-EXECUTION-TERMS", issue.get("msg", "Invalid execution terms."), diagnostic_path)
+        return None
 
 
 def _risk(tc: TypeChecker, raw: Any, path: str):
