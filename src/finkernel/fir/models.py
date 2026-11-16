@@ -55,7 +55,6 @@ class FIRUnderlying(FIRNode):
 class FIRReference(FIRNode):
     aggregation: str
     underlyings: List[str]
-    performance: Optional[Dict[str, str]] = None
 
 
 class FIRObservationSchedule(FIRNode):
