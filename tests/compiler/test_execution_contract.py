@@ -83,9 +83,7 @@ def test_quanto_requires_an_explicit_quanto_rate(compiler, phoenix_data):
     terms = phoenix_data["execution"]["performance"]
     terms.update({
         "fx_treatment": "quanto",
-        "fx_fixing_date": "2027-01-14",
-        "fx_fixing_source": "contractual_fx_fixing",
-        "fx_quote_convention": "product_per_underlying",
+        "quanto_quote_convention": "product_per_underlying",
     })
     result = compile_data(compiler, phoenix_data)
     assert not result.success and result.fir is None
