@@ -512,19 +512,35 @@
               ]
             },
             "fx_fixing_date": {
-              "$ref": "#/$defs/date"
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
             },
             "fx_fixing_source": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
             },
             "fx_quote_convention": {
+              "type": [
+                "string",
+                "null"
+              ],
               "enum": [
                 "product_per_underlying",
-                "underlying_per_product"
+                "underlying_per_product",
+                null
               ]
             },
             "quanto_rate": {
-              "type": "number",
+              "type": [
+                "number",
+                "null"
+              ],
               "exclusiveMinimum": 0
             }
           },
