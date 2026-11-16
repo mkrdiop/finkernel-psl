@@ -152,3 +152,13 @@ def test_unquoted_iso_dates_are_rejected(compiler, phoenix_yaml):
     )
     result = compiler.compile(source)
     assert not result.success and result.fir is None
+
+
+
+def test_phoenix_subtype_rejects_best_of_when_maturity_redemption_is_worst_of(compiler, phoenix_data):
+    phoenix_data["reference"]["aggregation"] = "BEST_OF"
+    phoenix_data["payoff"]["components"][0]["condition"]["reference"] = "best_of_performance"
+    phoenix_data["payoff"]["components"][1]["trigger"]["reference"] = "best_of_performance"
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-PHOENIX-AGGREGATION" in codes(result)
