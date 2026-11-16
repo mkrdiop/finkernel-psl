@@ -266,16 +266,19 @@ def execution_eligibility(features: dict) -> str:
                                      "fallback_hierarchy", "discretionary_early_termination",
                                      "unsupported_event")):
         return "REJECT_PSL1_EXECUTION_INELIGIBLE"
-    rounding = features["rounding"]
+    rounding = features["coupon_rounding"]
     if not isinstance(rounding.get("precision"), int) or rounding["precision"] < 0:
         return "REJECT_PSL1_EXECUTION_INELIGIBLE"
     if rounding.get("mode") not in {"half_even", "half_up", "down"}:
         return "REJECT_PSL1_EXECUTION_INELIGIBLE"
     quantum = Decimal(1).scaleb(-rounding["precision"])
-    # If every contractual amount is already exactly representable at the declared
-    # precision, the unresolved stage cannot change the result. Otherwise fail closed.
+    # Coupon precision/mode are defined in PSL 1.0, but their stage is not.
+    # If every coupon/memory amount is already exact at that precision, no rounding
+    # operation is needed. Principal has no corresponding FIR 1.0 rounding fields.
     if any(Decimal(amount) != Decimal(amount).quantize(quantum)
            for amount in rounding["exact_amounts"]):
+        return "REJECT_PSL1_EXECUTION_INELIGIBLE"
+    if features["principal_rounding_required"]:
         return "REJECT_PSL1_EXECUTION_INELIGIBLE"
     return "ELIGIBLE"
 
