@@ -596,24 +596,16 @@
                 ]
               },
               "then": {
-                "not": {
-                  "anyOf": [
-                    {
-                      "required": [
-                        "fx_fixing_date"
-                      ]
-                    },
-                    {
-                      "required": [
-                        "fx_fixing_source"
-                      ]
-                    },
-                    {
-                      "required": [
-                        "fx_quote_convention"
-                      ]
-                    }
-                  ]
+                "properties": {
+                  "fx_fixing_date": {
+                    "type": "null"
+                  },
+                  "fx_fixing_source": {
+                    "type": "null"
+                  },
+                  "fx_quote_convention": {
+                    "type": "null"
+                  }
                 }
               }
             }
