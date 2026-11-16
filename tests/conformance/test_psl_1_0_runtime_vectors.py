@@ -266,7 +266,8 @@ def execution_eligibility(features: dict) -> str:
         return "REJECT_PSL1_EXECUTION_INELIGIBLE"
     if any(features[key] for key in ("independent_fixing_calendar", "per_currency_quanto",
                                      "fallback_hierarchy", "discretionary_early_termination",
-                                     "unsupported_event")):
+                                     "unsupported_event", "component_specific_payment_schedule",
+                                     "unsupported_schedule_convention", "unsupported_fx_transform")):
         return "REJECT_PSL1_EXECUTION_INELIGIBLE"
     rounding = features["coupon_rounding"]
     if not isinstance(rounding.get("precision"), int) or rounding["precision"] < 0:
