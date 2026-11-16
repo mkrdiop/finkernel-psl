@@ -274,7 +274,7 @@ The machine-readable structural schema is `schemas/psl/v1/psl.schema.json`. Comp
 - `formula`: `price_over_initial`;
 - `fx_treatment`: `local_currency`, `convert_to_product_currency` or `quanto`.
 
-For conversion or quanto, `fx_fixing_date`, `fx_fixing_source` and `fx_quote_convention` are all mandatory. Quanto additionally requires an explicit positive `quanto_rate`. Quote convention is `product_per_underlying` or `underlying_per_product`. FX fixing fields are forbidden for `local_currency`. Local-currency performance is an explicit choice: each underlying's return is calculated in its own denomination before basket aggregation. The compiler does not infer an FX conversion.
+For `convert_to_product_currency`, `fx_fixing_date_rule: initial_and_observation_fixings`, `fx_fixing_source` and `fx_quote_convention` are mandatory. For `quanto`, a positive `quanto_rate` and `quanto_quote_convention` are mandatory; spot FX fixing fields are forbidden. Quote conventions are `product_per_underlying` or `underlying_per_product`. All FX and quanto fields are forbidden for `local_currency`. Local-currency performance is an explicit choice: each underlying's return is calculated in its own denomination before basket aggregation. The compiler does not infer an FX conversion.
 
 `execution.coupon` requires day count (`ACT_360`, `ACT_365F`, `30_360`), accrual start (`inception_date_for_first_period_then_previous_observation`), accrual end and payment date rules (`observation_date` in PSL 1.0), stub rule (`short_first`, `long_first`, `short_last`, `long_last`), rounding precision [0, 8] and rounding mode (`half_even`, `half_up`, `down`).
 
