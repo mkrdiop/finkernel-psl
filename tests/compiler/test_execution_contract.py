@@ -117,3 +117,12 @@ def test_execution_decimal_fields_reject_string_coercion(compiler, phoenix_data)
     result = compile_data(compiler, phoenix_data)
     assert not result.success and result.fir is None
     assert "E-EXECUTION-TERMS" in codes(result)
+
+def test_disabled_coupon_memory_cannot_carry_an_unpaid_policy(compiler, phoenix_data):
+    phoenix_data["payoff"]["components"][0]["memory"] = {
+        "enabled": False,
+        "unpaid_coupon": "accumulate",
+    }
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-UNPAID-COUPON-WHEN-DISABLED" in codes(result)
