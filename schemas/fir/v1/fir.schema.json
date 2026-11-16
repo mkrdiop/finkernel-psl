@@ -251,13 +251,6 @@
                 "quanto"
               ]
             },
-            "fx_fixing_date": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "format": "date"
-            },
             "fx_fixing_source": {
               "type": [
                 "string",
@@ -281,6 +274,27 @@
                 "null"
               ],
               "pattern": "^[0-9]+(\\\\.[0-9]+)?$"
+            },
+            "fx_fixing_date_rule": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "initial_and_observation_fixings",
+                null
+              ]
+            },
+            "quanto_quote_convention": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "product_per_underlying",
+                "underlying_per_product",
+                null
+              ]
             }
           }
         },
