@@ -149,7 +149,8 @@
           "id",
           "type",
           "name",
-          "currency"
+          "currency",
+          "market_identifier"
         ],
         "properties": {
           "id": {
@@ -201,7 +202,8 @@
           }
         },
         "additionalProperties": false
-      }
+      },
+      "minItems": 1
     },
     "reference": {
       "type": "object",
@@ -222,7 +224,8 @@
           "items": {
             "type": "string"
           },
-          "uniqueItems": true
+          "uniqueItems": true,
+          "minItems": 1
         }
       }
     },
@@ -502,7 +505,12 @@
             "initial_fixing_source",
             "price_field",
             "formula",
-            "fx_treatment"
+            "fx_treatment",
+            "fx_fixing_date_rule",
+            "fx_fixing_source",
+            "fx_quote_convention",
+            "quanto_rate",
+            "quanto_quote_convention"
           ],
           "properties": {
             "initial_fixing_date": {
@@ -534,7 +542,8 @@
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "minLength": 1
             },
             "fx_quote_convention": {
               "type": [
