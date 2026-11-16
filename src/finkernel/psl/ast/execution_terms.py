@@ -16,7 +16,7 @@ class PerformanceDefinition(ExecutionNode):
     initial_fixing_date: date
     initial_fixing_source: str
     price_field: Literal["close", "official_close", "adjusted_close"]
-    formula: Literal["price_over_initial_minus_one"]
+    formula: Literal["price_over_initial"]
     fx_treatment: Literal["local_currency", "convert_to_product_currency", "quanto"]
     fx_fixing_date: Optional[date] = None
     fx_fixing_source: Optional[str] = None
@@ -62,7 +62,7 @@ class PerformanceDefinition(ExecutionNode):
 
 class CouponEconomics(ExecutionNode):
     day_count: Literal["ACT_360", "ACT_365F", "30_360"]
-    accrual_start_rule: Literal["inception_date", "previous_observation"]
+    accrual_start_rule: Literal["inception_date_for_first_period_then_previous_observation"]
     accrual_end_rule: Literal["observation_date"]
     payment_date_rule: Literal["observation_date"]
     stub_rule: Literal["short_first", "long_first", "short_last", "long_last"]
