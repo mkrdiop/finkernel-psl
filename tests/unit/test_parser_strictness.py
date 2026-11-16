@@ -32,7 +32,12 @@ def test_invalid_documents_rejected(text):
 
 
 def test_yaml11_pitfalls_are_not_silently_coerced():
-    d = parse_yaml_strict("id: NO\\nlag: 010\\nflag: yes\\nnum: 1e3\\nx: 100000.00\\n").data
+    d = parse_yaml_strict("""id: NO
+lag: 010
+flag: yes
+num: 1e3
+x: 100000.00
+""").data
     assert d["id"] == "NO"            # pas False
     assert d["lag"] == "010"          # pas 8 (octal)
     assert d["flag"] == "yes"         # pas True
@@ -42,7 +47,7 @@ def test_yaml11_pitfalls_are_not_silently_coerced():
 
 def test_unquoted_iso_date_is_rejected_by_parser():
     with pytest.raises(PSLSyntaxError, match="must be quoted"):
-        parse_yaml_strict("day: 2027-01-15\\n")
+        parse_yaml_strict("day: 2027-01-15\n")
 
 
 def test_source_map_locates_nested_paths():
