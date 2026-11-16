@@ -104,3 +104,17 @@ def test_unregistered_product_subtype_is_not_executable(compiler, phoenix_data):
     result = compile_data(compiler, phoenix_data)
     assert not result.success and result.fir is None
     assert "E-SUBTYPE-UNREGISTERED" in codes(result)
+
+
+def test_legacy_free_form_reference_performance_is_rejected(compiler, phoenix_data):
+    phoenix_data["reference"]["performance"] = {"formula": "guessed"}
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-UNKNOWN-FIELD" in codes(result)
+
+
+def test_execution_decimal_fields_reject_string_coercion(compiler, phoenix_data):
+    phoenix_data["execution"]["autocall_redemption"]["principal_fraction"] = "1.0"
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-EXECUTION-TERMS" in codes(result)
