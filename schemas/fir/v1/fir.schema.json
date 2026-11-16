@@ -42,7 +42,18 @@
           "type": "string"
         },
         "currency": {
-          "type": "string"
+          "enum": [
+            "EUR",
+            "USD",
+            "JPY",
+            "GBP",
+            "CHF",
+            "CAD",
+            "AUD",
+            "SEK",
+            "NOK",
+            "DKK"
+          ]
         }
       }
     },
@@ -69,7 +80,18 @@
               "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
             },
             "currency": {
-              "type": "string"
+              "enum": [
+                "EUR",
+                "USD",
+                "JPY",
+                "GBP",
+                "CHF",
+                "CAD",
+                "AUD",
+                "SEK",
+                "NOK",
+                "DKK"
+              ]
             }
           }
         },
@@ -91,13 +113,29 @@
           ],
           "properties": {
             "currency": {
-              "type": "string"
+              "enum": [
+                "EUR",
+                "USD",
+                "JPY",
+                "GBP",
+                "CHF",
+                "CAD",
+                "AUD",
+                "SEK",
+                "NOK",
+                "DKK"
+              ]
             },
             "payment_lag": {
-              "type": "integer"
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
             },
             "payment_lag_unit": {
-              "type": "string"
+              "enum": [
+                "business_days",
+                "calendar_days"
+              ]
             }
           }
         }
@@ -118,21 +156,51 @@
             "type": "string"
           },
           "type": {
-            "type": "string"
+            "enum": [
+              "equity_index",
+              "equity"
+            ]
           },
           "name": {
             "type": "string"
           },
           "currency": {
-            "type": "string"
+            "enum": [
+              "EUR",
+              "USD",
+              "JPY",
+              "GBP",
+              "CHF",
+              "CAD",
+              "AUD",
+              "SEK",
+              "NOK",
+              "DKK"
+            ]
           },
           "market_identifier": {
             "type": [
               "object",
               "null"
-            ]
+            ],
+            "additionalProperties": false,
+            "required": [
+              "scheme",
+              "value"
+            ],
+            "properties": {
+              "scheme": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "reference": {
@@ -144,13 +212,17 @@
       ],
       "properties": {
         "aggregation": {
-          "type": "string"
+          "enum": [
+            "WORST_OF",
+            "BEST_OF"
+          ]
         },
         "underlyings": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "uniqueItems": true
         }
       }
     },
@@ -165,17 +237,33 @@
       ],
       "properties": {
         "frequency": {
-          "type": "string"
+          "enum": [
+            "monthly",
+            "quarterly",
+            "semi_annual",
+            "annual"
+          ]
         },
         "first_observation": {
           "type": "string",
           "format": "date"
         },
         "calendar": {
-          "type": "string"
+          "enum": [
+            "TARGET",
+            "NYSE",
+            "TOKYO",
+            "LONDON"
+          ]
         },
         "business_day_convention": {
-          "type": "string"
+          "enum": [
+            "following",
+            "modified_following",
+            "preceding",
+            "modified_preceding",
+            "unadjusted"
+          ]
         }
       }
     },
