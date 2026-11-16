@@ -28,8 +28,10 @@ class PerformanceDefinition(ExecutionNode):
     @field_validator("initial_fixing_date", mode="before")
     @classmethod
     def iso_calendar_date(cls, value):
-        if value is None or isinstance(value, date):
+        if value is None:
             return value
+        if isinstance(value, date):
+            raise ValueError("date literals must be quoted as YYYY-MM-DD")
         if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
             raise ValueError("date must use exact YYYY-MM-DD format")
         try:
