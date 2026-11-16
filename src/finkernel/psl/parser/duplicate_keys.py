@@ -54,7 +54,7 @@ class StrictPSLLoader(yaml.SafeLoader):
 _add = StrictPSLLoader.add_implicit_resolver
 _add("tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF"))
 _add("tag:yaml.org,2002:null", re.compile(r"^(?:~|null|Null|NULL|)$"), ["~", "n", "N", ""])
-_add("tag:yaml.org,2002:timestamp", re.compile(r"^\\d{4}-\\d{2}-\\d{2}$"), list("0123456789"))
+_add("tag:yaml.org,2002:timestamp", re.compile(r"^\d{4}-\d{2}-\d{2}$"), list("0123456789"))
 _add("tag:yaml.org,2002:int", re.compile(r"^[-+]?(?:0|[1-9][0-9]*)$"), list("-+0123456789"))
 _add(
     "tag:yaml.org,2002:float",
