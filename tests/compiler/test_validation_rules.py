@@ -94,9 +94,9 @@ def test_unused_underlying_warns(compiler, phoenix_data):
     assert r.success and "W-UL-UNUSED" in codes(r, "warning")
 
 
-def test_unknown_subtype_is_only_a_warning(compiler, phoenix_data):
+def test_unknown_subtype_is_rejected_for_execution(compiler, phoenix_data):
     r = _compile(compiler, phoenix_data, "product.subtype", "exotic_thing")
-    assert r.success and "W-SUBTYPE-UNREGISTERED" in codes(r, "warning")
+    assert not r.success and r.fir is None and "E-SUBTYPE-UNREGISTERED" in codes(r, "error")
 
 
 def test_capital_barrier_above_coupon_barrier_warns(compiler, phoenix_data):
