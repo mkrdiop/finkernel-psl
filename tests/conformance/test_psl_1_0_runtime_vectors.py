@@ -372,7 +372,7 @@ class RuntimeContractVectors(unittest.TestCase):
         for vector in VECTORS["provenance_vectors"]:
             with self.subTest(vector=vector["id"], rule=vector["rule"]):
                 provenance = vector["provenance"]
-                if vector["expected"] == "REJECT_INCOMPLETE_EXECUTION_PROVENANCE":
+                if vector.get("expected") == "REJECT_INCOMPLETE_EXECUTION_PROVENANCE":
                     with self.assertRaisesRegex(ContractError, vector["expected"]):
                         execution_provenance_hash(provenance)
                     continue
