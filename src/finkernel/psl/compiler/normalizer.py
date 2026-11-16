@@ -75,6 +75,7 @@ def normalize(ast: PSLDocumentAST) -> Tuple[FIRContract, Optional[Dict[str, Any]
             frequency=obs.frequency.value, first_observation=obs.first_observation.isoformat(),
             calendar=obs.calendar.value, business_day_convention=obs.business_day_convention.value),
         components=[_component(comp) for comp in ast.payoff_components],
+        execution_terms=to_canonical(ast.execution),
     )
     valuation = to_canonical(ast.valuation) if ast.valuation is not None else None
     risk = {"measures": sorted({m.value for m in ast.risk_measures})} if ast.risk_measures else None
