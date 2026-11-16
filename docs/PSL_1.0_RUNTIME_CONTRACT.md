@@ -191,7 +191,7 @@ A coupon evaluation is performed exactly once at its scheduled observation. It u
 For a memory coupon:
 - If the coupon condition is satisfied, the coupon obligation is the current period's accrued coupon plus all previously accumulated unpaid coupon memory. The memory balance is reset to zero once that obligation is created.
 - If the condition is not satisfied, the current period's accrued coupon is added to unpaid coupon memory.
-- Memory arithmetic uses exact decimal values. It MUST NOT round intermediate values because PSL 1.0 does not define a rounding stage. Accordingly, a contract requiring a rounding decision that affects accrual, accumulation or payment is not execution-eligible under §8.
+- Memory arithmetic uses exact decimal values. It MUST NOT round intermediate values because PSL 1.0 does not define a rounding stage. A contract is execution-eligible only when the runtime can prove that every coupon, memory and principal amount on the execution path is already exactly representable at the declared precision, so no rounding operation is needed. If any relevant amount would require rounding, or exact representability cannot be established, execution MUST fail closed under §8.
 - Coupon evaluation/payment obligation creation MUST NOT occur more than once for the same component and observation index.
 
 The same-date priority permutation determines coupon/autocall interaction:
@@ -211,8 +211,8 @@ The following are not safely determined by the PSL 1.0 contract. The runtime MUS
 |---|---|---|---|
 | U01 | Exact `30_360` day-count variant | Reject execution if selected | Add explicit variant (e.g. 30/360 US, 30E/360) |
 | U02 | Exact first/last stub period construction | Reject execution if a stub is required | Define unadjusted period generation and short/long first/last algorithms |
-| U03 | Coupon rounding stage relative to memory accumulation/payment | Reject execution if rounding affects coupon economics | Define accrual precision, per-period/final rounding stage and memory rounding |
-| U04 | Principal cashflow rounding stage/fields | Reject execution if rounding is required but not specified by FIR | Define principal precision and rounding semantics |
+| U03 | Coupon rounding stage relative to memory accumulation/payment | Reject execution if any relevant coupon/memory amount requires rounding or exact representability cannot be proved | Define accrual precision, per-period/final rounding stage and memory rounding |
+| U04 | Principal cashflow rounding stage | Reject execution if any relevant principal amount requires rounding or exact representability cannot be proved | Define principal rounding stage and semantics |
 | U05 | Independent underlying fixing calendars | Reject; use only the defined observation-date rule | Add fixing calendar and fixing-date convention per source/underlying |
 | U06 | Per-currency quanto rates | Reject under existing single-rate restriction | Add typed per-currency rates and quote conventions |
 | U07 | Alternative/component-specific payment schedules or lags | Reject unsupported schedule semantics | Add typed payment schedules and per-cashflow lag rules |
@@ -222,7 +222,7 @@ The following are not safely determined by the PSL 1.0 contract. The runtime MUS
 | U11 | New schedule-generation conventions beyond §3 | Reject unsupported convention | Add explicitly named/versioned schedule conventions |
 | U12 | New FX/performance transformations not represented in FIR 1.0 | Reject | Add typed transformations in PSL 1.1+ |
 
-A PSL 1.0 contract using `30_360`, a required stub, or an economically material unspecified rounding stage MUST NOT be marked execution-eligible merely because the compiler accepts the corresponding enum/fields. This restriction does not alter compiler acceptance or the contract hash; it is a runtime eligibility gate.
+A PSL 1.0 contract using `30_360` or requiring a stub MUST NOT be marked execution-eligible merely because the compiler accepts the corresponding enum/fields. PSL 1.0 requires coupon rounding precision and mode, but those fields specify neither the point at which coupon rounding occurs relative to period accrual/memory accumulation/payment nor the principal rounding stage. The runtime MUST NOT invent a stage or add a stage field to FIR 1.0. The conservative equivalence test is: if every relevant coupon, memory and principal amount can be proven exactly representable at the declared precision, no rounding operation is needed and the unresolved stage cannot affect the result; otherwise, or where exact representability cannot be proven, reject execution. The precision and mode fields remain mandatory in all cases. This test is a runtime eligibility restriction, not a new rounding convention, and does not alter compiler acceptance, PSL 1.0 syntax, FIR 1.0 shape or the contract hash.
 
 ## 9. Lifecycle state machine
 
@@ -319,7 +319,7 @@ This companion contract is grounded in the following existing normative requirem
 - PSL 1.0 §9 and §12: contract hash coverage, version compatibility, no silent reinterpretation, independent FIR versioning.
 - PSL 1.0 §14: typed closed-schema execution fields and explicit event priority, settlement calendar and payment lag.
 
-Where the source specification names a field but does not determine its economic interpretation (notably `30_360`, stubs and rounding stage), §8 is a restriction on runtime execution, not an invented interpretation.
+Where the source specification names a field but does not determine its economic interpretation (notably `30_360`, stubs and rounding stage), §8 is a restriction on runtime execution, not an invented interpretation. The rounding eligibility rule above preserves the existing precision/mode fields and rejects only cases where the unresolved stage can change an amount.
 
 ## 14. SFI-11 acceptance gate
 
@@ -327,12 +327,16 @@ SFI-11 is acceptable only when all of the following are true:
 
 1. This contract is reviewed and accepted as the normative runtime companion to PSL 1.0.
 2. The machine-readable conformance vectors in `tests/conformance/psl_1_0_runtime_vectors.json` are versioned and independently executable.
-3. The conformance runner validates every vector and its expected outcome; all six same-date permutations are covered.
-4. Positive vectors cover anchored EOM/non-EOM schedules, settlement lag, phase ordering, stable event identity and valid lifecycle transitions.
-5. Negative vectors cover collisions, unsupported calendar ranges, missing/duplicate/conflicting fixings, partial baskets, post-terminal events, identity collisions and all §8 execution-ineligible features.
-6. Vector failures identify a stable vector ID and rule ID.
+3. The conformance runner executes reference functions from vector inputs and validates every expected outcome; it MUST NOT validate fixture labels against hard-coded expected labels.
+4. Schedule vectors cover monthly, quarterly, semi-annual and annual frequencies, EOM/non-EOM anchoring, adjusted-date collisions and calendar range failures.
+5. Calendar vectors execute following, preceding, modified-following, modified-preceding and unadjusted conventions, plus missing-calendar and content-hash-mismatch rejection.
+6. Settlement vectors cover calendar-day and business-day lags, zero lag and post-lag business-day adjustment.
+7. Fixing vectors validate the complete `(underlying, date, price_field, source)` key, exact cardinality (including equal-value duplicates), key-dimension mismatches and all-or-nothing basket admission.
+8. Event vectors execute mandatory phase ordering, the supplied same-date priority permutation, all six permutations through the coupon-memory/autocall/capital-redemption reducer, terminal suppression and lifecycle transitions.
+9. Identity vectors execute canonical event-ID hashing, same-content replay, same-ID/different-content collision and duplicate-action rejection. Eligibility vectors execute every §8 predicate, including exact-rounding-equivalence and economically material rounding cases.
+10. Vector failures identify a stable vector ID and rule ID; every vector group is exercised by CI on Python 3.10, 3.11 and 3.12.
 7. Tests require no production runtime implementation; the reference oracle exists solely to verify the published examples and normative expected outcomes.
-8. The contract and vectors are linked from SFI-11 and CI.
-9. No production runtime implementation begins until the user/architect explicitly accepts the specification gate.
+11. The contract and vectors are linked from SFI-11 and CI.
+12. No production runtime implementation begins until the user/architect explicitly accepts the specification gate.
 
 Passing this gate approves the specification and test contract only. It does not mark SFI-11 implemented, nor authorize SFI-12–15 implementation without their own approved contracts.
