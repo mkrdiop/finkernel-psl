@@ -256,3 +256,39 @@ The following are release blockers for PSL 1.0 execution conformance:
 - [ ] Verify compiler and schema behavior with golden, property, negative and compatibility tests in CI.
 
 This checklist is deliberately explicit: the current compiler baseline is not declared fully PSL 1.0 execution-conformant merely because it can compile the existing Phoenix syntax example.
+
+
+## 14. PSL 1.0 execution contract — normative implementation addendum
+
+The typed, closed-schema `execution` mapping is REQUIRED for all executable PSL 1.0 documents. It is part of the contractual identity and is included in FIR 1.0 `execution_terms`. The former free-form `reference.performance` mapping is not part of PSL 1.0 and MUST be rejected as an unknown field. Performance semantics live only at `execution.performance`.
+
+The machine-readable structural schema is `schemas/psl/v1/psl.schema.json`. Compiler semantic validation remains authoritative for cross-field constraints that JSON Schema cannot express, including uniqueness, date ordering, currency consistency, basket membership, observation ranges and the complete event-priority permutation.
+
+### 14.1 Typed execution fields
+
+`execution.performance` requires:
+- `initial_fixing_date`: ISO date, not later than first observation;
+- `initial_fixing_source`: non-empty source identifier;
+- `price_field`: `close`, `official_close` or `adjusted_close`;
+- `formula`: `price_over_initial_minus_one`;
+- `fx_treatment`: `local_currency`, `convert_to_product_currency` or `quanto`.
+
+For conversion or quanto, `fx_fixing_date`, `fx_fixing_source` and `fx_quote_convention` are all mandatory. Quote convention is `product_per_underlying` or `underlying_per_product`. FX fixing fields are forbidden for `local_currency`. Local-currency performance is an explicit choice: each underlying's return is calculated in its own denomination before basket aggregation. The compiler does not infer an FX conversion.
+
+`execution.coupon` requires day count (`ACT_360`, `ACT_365F`, `30_360`), accrual start (`inception_date` or `previous_observation`), accrual end and payment date rules (`observation_date` in PSL 1.0), stub rule (`short_first`, `long_first`, `short_last`, `long_last`), rounding precision [0, 8] and rounding mode (`half_even`, `half_up`, `down`).
+
+`execution.same_date_priority` MUST be a permutation containing exactly once each of `coupon`, `autocall` and `capital_redemption`. This is the contractual precedence order when events share an observation date; it is not inferred from YAML component order.
+
+`execution.autocall_redemption` requires a positive `principal_fraction` and an `unpaid_coupon_policy` of `pay_all` or `forfeit`.
+
+`execution.maturity_redemption` requires a positive `above_barrier_principal_fraction`, `below_barrier_formula: worst_of_performance`, and explicit `equality_treatment: protected | unprotected`. These are distinct from the barrier trigger itself.
+
+Settlement calendar and adjustment are explicit through `execution.settlement_calendar` and `execution.settlement_business_day_convention`. They do not replace the observation calendar.
+
+All execution fields are typed Pydantic AST nodes with extra fields forbidden. Missing, malformed, unknown or internally inconsistent execution terms are compiler errors; no executable FIR is produced. The canonical FIR contract contains the complete normalized execution terms, so changing any of them changes `contract_hash`.
+
+### 14.2 Canonical FIR 1.0 schema
+
+The canonical contract schema is published at `schemas/fir/v1/fir.schema.json`. It formalizes the existing FIR version dimension (`fir_version: "1.0"`) and does not introduce a competing version field. The contract payload includes `execution_terms`; valuation, risk, metadata and provenance remain outside the contractual hash according to the existing hash separation rules.
+
+The executable reference fixture is `examples/phoenix_autocall_worst_of/phoenix_autocall.yaml`; its normalized contract snapshot is `tests/golden/phoenix_fir_v1.json`.
