@@ -33,11 +33,35 @@ Wall-clock time, random identifiers, process order, host locale, machine timezon
 5. A runtime MUST report the PSL version, FIR version, compiler version, runtime version, event-schema version, calendar bundle identifier/hash and fixing snapshot identifier/hash used for every run.
 6. Historical runs MUST remain reproducible using the exact referenced immutable input artifacts. A changed calendar or fixing snapshot is a different execution input and MUST NOT overwrite the prior run's provenance.
 
+## 2.1 Normative decision register
+
+The following fifteen decisions are the runtime clarification register. Their detailed requirements are normative in the referenced sections.
+
+| # | Decision | Contract section |
+|---|---|---|
+| D01 | Original-anchor month schedule generation; anchored EOM and non-EOM day restoration | §3.1 |
+| D02 | Preserve nominal/adjusted dates and reject adjusted-date collisions | §3.3 |
+| D03 | Immutable, versioned calendar bundle with provenance and content hash | §3.2 |
+| D04 | Fail closed for missing calendar data, hash mismatch and unsupported date range | §3.2 |
+| D05 | Exactly one authoritative fixing per underlying/date/field/source key | §4.1 |
+| D06 | No carry-forward, interpolation, nearest-date, source substitution or partial-basket evaluation | §4.1 |
+| D07 | Initial fixing uses its explicit date; scheduled fixings use adjusted observation dates; no independent fixing calendar | §4.2 and §8 |
+| D08 | Contract-level payment lag applies uniformly to coupon and principal, anchored at adjusted contractual event date | §5 |
+| D09 | Observation and settlement calendars are distinct and independently resolved | §3.2 and §5 |
+| D10 | Typed event vocabulary and mandatory fixing/component/settlement phases | §6 |
+| D11 | Exact same-date priority permutation is authoritative; all six permutations are conformance cases | §6.3 and §7 |
+| D12 | Deterministic coupon-memory/autocall policy interaction and terminal short-circuit | §7 |
+| D13 | Explicit lifecycle states; autocall/maturity are contractual terminal states; no discretionary early termination | §9 |
+| D14 | Deterministic event IDs, idempotent replay and duplicate-action rejection | §10 |
+| D15 | Immutable execution provenance for compiler/runtime/event-schema and calendar/fixing inputs | §2 and §11 |
+
+A decision is not implemented merely because it appears in this register. It is a normative acceptance requirement and MUST be covered by one or more vectors in the conformance package.
+
 ## 3. Schedule construction and calendar resolution
 
 ### 3.1 Nominal schedule generation
 
-The first observation date is the immutable schedule anchor. For monthly frequency intervals, each nominal date MUST be generated directly from that original anchor by adding the corresponding integer number of calendar months. An adjusted observation date MUST NEVER become the anchor for a later date.
+The first observation date is the immutable schedule anchor. For every PSL 1.0 month-based frequency (monthly, quarterly, semi-annual and annual), each nominal date MUST be generated directly from that original anchor by adding the corresponding integer number of calendar months. An adjusted observation date MUST NEVER become the anchor for a later date.
 
 End-of-month rule:
 - If the anchor is the final calendar day of its month, every generated nominal date MUST be the final calendar day of its target month.
@@ -241,7 +265,7 @@ Event IDs MUST be deterministic and derived from a canonical tuple containing at
 - calendar bundle hash;
 - fixing snapshot hash when the event depends on fixings.
 
-The tuple MUST be canonicalized and hashed with a documented stable algorithm (SHA-256). UUIDs, timestamps, random values, hostnames and process-local counters MUST NOT participate.
+The tuple MUST be serialized as canonical UTF-8 JSON using sorted object keys, compact separators, ISO dates, explicit nulls and canonical decimal strings, then hashed with SHA-256. UUIDs, timestamps, random values, hostnames and process-local counters MUST NOT participate.
 
 Idempotency rules:
 - Reprocessing an event ID with byte-for-byte identical canonical event content is an idempotent replay and MUST NOT duplicate state changes or cashflows.
