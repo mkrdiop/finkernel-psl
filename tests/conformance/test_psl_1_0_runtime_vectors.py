@@ -370,6 +370,7 @@ class RuntimeContractVectors(unittest.TestCase):
             with self.subTest(vector=vector["id"]):
                 event = vector["event"]
                 event_id = deterministic_event_id(event)
+                self.assertEqual(event_id, vector["expected_event_id"])
                 ledger = IdempotencyLedger()
                 action = (event["component"], event["observation_index"], event["kind"])
                 self.assertEqual(ledger.apply(event_id, event, action), "APPLIED")
