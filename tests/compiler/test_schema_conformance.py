@@ -75,3 +75,12 @@ def test_fir_schema_enforces_canonical_decimal_ranges():
         "quanto_quote_convention": "product_per_underlying",
     })
     assert list(validator.iter_errors(candidate))
+
+
+
+def test_phoenix_psl_schema_requires_coupon_memory(phoenix_yaml):
+    schema = load_schema("schemas/psl/v1/psl.schema.json")
+    document = parse_yaml_strict(phoenix_yaml).data
+    del document["payoff"]["components"][0]["memory"]
+    errors = list(Draft202012Validator(schema).iter_errors(document))
+    assert errors
