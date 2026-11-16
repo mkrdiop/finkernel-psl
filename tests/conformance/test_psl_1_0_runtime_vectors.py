@@ -165,6 +165,8 @@ def order_events(events: list[dict], same_date_priority: list[str]) -> list[dict
     required = {"coupon", "autocall", "capital_redemption"}
     if len(same_date_priority) != 3 or set(same_date_priority) != required:
         raise ContractError("REJECT_INVALID_SAME_DATE_PRIORITY")
+    if any(event.get("kind") not in PHASE for event in events):
+        raise ContractError("REJECT_UNKNOWN_EVENT_KIND")
     rank = {component: index for index, component in enumerate(same_date_priority)}
     def key(event):
         phase = PHASE[event["kind"]]
@@ -307,7 +309,10 @@ class RuntimeContractVectors(unittest.TestCase):
         for vector in VECTORS["adjustment_vectors"]:
             with self.subTest(vector=vector["id"]):
                 if vector["expected"].startswith("REJECT"):
-                    if vector["expected"] == "REJECT_CALENDAR_MISSING":
+                    if vector["expected"] == "REJECT_UNKNOWN_EVENT_KIND":
+                        with self.assertRaisesRegex(ContractError, vector["expected"]):
+                            order_events(vector["events"], vector["priority"])
+                    elif vector["expected"] == "REJECT_CALENDAR_MISSING":
                         with self.assertRaisesRegex(ContractError, vector["expected"]):
                             validate_calendar(None)
                     else:
@@ -321,6 +326,9 @@ class RuntimeContractVectors(unittest.TestCase):
     def test_settlement_vectors(self):
         for vector in VECTORS["settlement_vectors"]:
             with self.subTest(vector=vector["id"]):
+                if "adjusted_event_date" in vector:
+                    self.assertEqual(vector["anchor"], vector["adjusted_event_date"])
+                    self.assertNotEqual(vector["nominal_event_date"], vector["anchor"])
                 actual = settlement_date(date.fromisoformat(vector["anchor"]),
                                          vector["lag"], vector["unit"],
                                          vector["convention"], self.cal)
@@ -348,6 +356,34 @@ class RuntimeContractVectors(unittest.TestCase):
                                           vector["requested_date"], vector["price_field"],
                                           vector["source"])
                 self.assertEqual(actual, vector["expected"])
+
+    def test_fixing_date_rules(self):
+        for vector in VECTORS["fixing_date_vectors"]:
+            with self.subTest(vector=vector["id"], rule=vector["rule"]):
+                if vector["kind"] == "INITIAL_FIXING":
+                    actual = vector["initial_fixing_date"]
+                elif vector["kind"] == "OBSERVATION_FIXING":
+                    actual = vector["adjusted_observation_date"]
+                else:
+                    raise ContractError("REJECT_UNSUPPORTED_FIXING_DATE_RULE")
+                self.assertEqual(actual, vector["expected"])
+
+    def test_execution_provenance_is_canonical_and_input_addressed(self):
+        for vector in VECTORS["provenance_vectors"]:
+            with self.subTest(vector=vector["id"], rule=vector["rule"]):
+                required = {"psl_version", "fir_version", "compiler_version", "runtime_version",
+                            "event_schema_version", "calendar_bundle_id", "calendar_hash",
+                            "fixing_snapshot_id", "fixing_hash"}
+                provenance = vector["provenance"]
+                self.assertEqual(set(provenance), required)
+                actual = hashlib.sha256(canonical_json(provenance).encode("utf-8")).hexdigest()
+                reordered = dict(reversed(list(provenance.items())))
+                replay = hashlib.sha256(canonical_json(reordered).encode("utf-8")).hexdigest()
+                changed = hashlib.sha256(canonical_json(vector["changed_provenance"]).encode("utf-8")).hexdigest()
+                self.assertEqual(actual, vector["expected_hash"])
+                self.assertEqual(replay, vector["expected_hash"])
+                self.assertEqual(changed, vector["changed_expected_hash"])
+                self.assertNotEqual(actual, changed)
 
     def test_phase_order_vector(self):
         vector = VECTORS["phase_vectors"][0]
@@ -403,8 +439,9 @@ class RuntimeContractVectors(unittest.TestCase):
 
     def test_vector_ids_and_rule_coverage_are_unique(self):
         groups = ("schedule_vectors", "adjustment_vectors", "settlement_vectors",
-                  "fixing_vectors", "event_vectors", "event_sort_vectors", "phase_vectors",
-                  "lifecycle_vectors", "identity_vectors", "eligibility_vectors")
+                  "fixing_vectors", "fixing_date_vectors", "event_vectors", "event_sort_vectors",
+                  "phase_vectors", "lifecycle_vectors", "identity_vectors", "eligibility_vectors",
+                  "provenance_vectors")
         vectors = [item for group in groups for item in VECTORS[group]] + [VECTORS["calendar_roles"]]
         ids = [item["id"] for item in vectors]
         self.assertEqual(len(ids), len(set(ids)))
