@@ -15,9 +15,9 @@ def validate_contract(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
     subtype = ast.product.subtype
     required = rules.REQUIRED_COMPONENTS.get(subtype)
     if required is None:
-        bag.warning("W-SUBTYPE-UNREGISTERED",
-                    f"No contractual rules are registered for subtype '{subtype}'; completeness of the "
-                    "contract was not checked.", "product.subtype")
+        bag.error("E-SUBTYPE-UNREGISTERED",
+                  f"No contractual rules are registered for subtype '{subtype}'; executable completeness cannot be established.",
+                  "product.subtype")
         return
 
     counts = Counter(c.type for c in ast.payoff_components)
@@ -36,6 +36,11 @@ def validate_contract(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
     autocall = next((c for c in ast.payoff_components if isinstance(c, AutocallComponent)), None)
     capital = next((c for c in ast.payoff_components if isinstance(c, CapitalProtectionComponent)), None)
     idx = {id(c): i for i, c in enumerate(ast.payoff_components)}
+
+    if coupon is not None and coupon.memory is None:
+        bag.error("E-COUPON-MEMORY-UNSPECIFIED",
+                  "Memory behavior must be explicit; set memory.enabled true or false.",
+                  f"payoff.components[{idx[id(coupon)]}].memory")
 
     if autocall is not None:
         base = f"payoff.components[{idx[id(autocall)]}]"
