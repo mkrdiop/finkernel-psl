@@ -172,7 +172,7 @@ The capital barrier MUST be checked against the defined maturity reference perfo
 
 ### 7.4 Phoenix subtype completeness
 
-For `product.subtype: phoenix_autocallable`, exactly one each of `memory_coupon`, `autocall`, and `conditional_capital_protection` is required. No unregistered component is accepted for this subtype.
+For `product.subtype: phoenix_autocallable`, exactly one each of `memory_coupon`, `autocall`, and `conditional_capital_protection` is required. The basket aggregation MUST be `WORST_OF`, because PSL 1.0 defines the maturity loss formula as `worst_of_performance`. No unregistered component is accepted for this subtype.
 
 The contract MUST also define:
 - coupon accrual/day count and coupon payment rules;
