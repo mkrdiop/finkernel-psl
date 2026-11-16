@@ -119,8 +119,14 @@ class RuntimeContractVectors(unittest.TestCase):
         obligation = Decimal(coupon_first["memory_before"]) + Decimal(coupon_first["current_coupon"])
         self.assertEqual(obligation, Decimal(coupon_first["expected_coupon_obligation"]))
         self.assertEqual(coupon_first["expected_memory_after_coupon"], "0")
+        self.assertEqual(autocall_first["autocall_unpaid_coupon_policy"], "forfeit")
         self.assertEqual(autocall_first["expected_coupon_obligation"], "0")
-        self.assertEqual(autocall_first["expected_memory_after_coupon"], autocall_first["memory_before"])
+        self.assertEqual(autocall_first["expected_autocall_unpaid_coupon_obligation"], "0")
+        self.assertEqual(autocall_first["expected_memory_forfeited"], autocall_first["memory_before"])
+        pay_all = next(v for v in VECTORS["event_order_vectors"] if v["kind"] == "autocall_before_coupon_pay_all")
+        self.assertEqual(pay_all["autocall_unpaid_coupon_policy"], "pay_all")
+        self.assertEqual(Decimal(pay_all["expected_autocall_unpaid_coupon_obligation"]), Decimal(pay_all["memory_before"]))
+        self.assertEqual(pay_all["expected_coupon_obligation"], "0")
 
     def test_lifecycle_vectors(self):
         allowed = {
