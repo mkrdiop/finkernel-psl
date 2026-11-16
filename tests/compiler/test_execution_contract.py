@@ -137,3 +137,18 @@ def test_single_quanto_rate_cannot_cover_multiple_foreign_currencies(compiler, p
     result = compile_data(compiler, phoenix_data)
     assert not result.success and result.fir is None
     assert "E-QUANTO-MULTI-CCY" in codes(result)
+
+
+
+def test_unquoted_iso_dates_are_rejected(compiler, phoenix_yaml):
+    source = phoenix_yaml.replace('inception_date: "2027-01-15"', "inception_date: 2027-01-15", 1)
+    result = compiler.compile(source)
+    assert not result.success and result.fir is None
+
+    source = phoenix_yaml.replace(
+        'initial_fixing_date: "2027-01-14"',
+        "initial_fixing_date: 2027-01-14",
+        1,
+    )
+    result = compiler.compile(source)
+    assert not result.success and result.fir is None
