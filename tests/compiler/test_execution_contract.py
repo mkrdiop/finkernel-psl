@@ -77,6 +77,7 @@ def test_execution_terms_are_present_in_canonical_fir(compiler, phoenix_yaml):
     payload = result.fir.contract.model_dump(mode="json")
     assert payload["execution_terms"]["performance"]["formula"] == "price_over_initial"
     assert payload["execution_terms"]["same_date_priority"] == ["coupon", "autocall", "capital_redemption"]
+    assert result.fir.contract.execution_terms.__class__.__name__ == "FIRExecutionTerms"
 
 
 def test_quanto_requires_an_explicit_quanto_rate(compiler, phoenix_data):
