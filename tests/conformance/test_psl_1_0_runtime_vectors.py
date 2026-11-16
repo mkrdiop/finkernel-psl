@@ -115,7 +115,7 @@ class RuntimeContractVectors(unittest.TestCase):
 
     def test_coupon_autocall_precedence_vectors(self):
         coupon_first = next(v for v in VECTORS["event_order_vectors"] if v["kind"] == "coupon_before_autocall")
-        autocall_first = next(v for v in VECTORS["event_order_vectors"] if v["kind"] == "autocall_before_coupon")
+        autocall_first = next(v for v in VECTORS["event_order_vectors"] if v["id"] == "EVT-AUTOCALL-FIRST-001")
         obligation = Decimal(coupon_first["memory_before"]) + Decimal(coupon_first["current_coupon"])
         self.assertEqual(obligation, Decimal(coupon_first["expected_coupon_obligation"]))
         self.assertEqual(coupon_first["expected_memory_after_coupon"], "0")
