@@ -251,6 +251,10 @@ def _coupon(tc: TypeChecker, raw: Dict[str, Any], path: str) -> Optional[MemoryC
                 tc.bag.error("E-MISSING-FIELD",
                              "Field 'unpaid_coupon' is required when memory is enabled (no silent default).", mp)
                 ok_mem = False
+            if enabled is False and "unpaid_coupon" in md:
+                tc.bag.error("E-UNPAID-COUPON-WHEN-DISABLED",
+                             "Field 'unpaid_coupon' is forbidden when memory is disabled.", mp)
+                ok_mem = False
             if enabled is None:
                 ok_mem = False
             elif ok_mem:
