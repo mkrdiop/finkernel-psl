@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from pydantic import ValidationError
 from typing import Any, Dict, Optional
 
 from finkernel.core.diagnostics import DiagnosticBag
+from finkernel.psl.ast.execution_terms import ExecutionTerms
 from finkernel.psl.ast.nodes import (
     AutocallComponent, CapitalProtectionComponent, ConditionExpression, ContractDeclaration,
     MarketIdentifier, MemoryCouponComponent, MemoryNode, NotionalNode, ObservationSchedule,
@@ -31,7 +33,7 @@ def build_ast(raw: Dict[str, Any], bag: DiagnosticBag) -> Optional[PSLDocumentAS
     tc = TypeChecker(bag)
     top = tc.fields(
         raw, "",
-        required=("psl_version", "product", "contract", "underlyings", "reference", "schedule", "payoff"),
+        required=("psl_version", "product", "contract", "underlyings", "reference", "schedule", "payoff", "execution"),
         optional=("valuation", "risk", "metadata"),
     )
     if top is None:
@@ -49,18 +51,19 @@ def build_ast(raw: Dict[str, Any], bag: DiagnosticBag) -> Optional[PSLDocumentAS
     reference = _reference(tc, top.get("reference", MISSING), "reference")
     schedule = _schedule(tc, top.get("schedule", MISSING), "schedule")
     components = _payoff(tc, top.get("payoff", MISSING), "payoff")
+    execution = _execution(tc, top.get("execution", MISSING), "execution")
 
     valuation = tc.free_mapping(top["valuation"], "valuation") if "valuation" in top else None
     metadata = tc.free_mapping(top["metadata"], "metadata") if "metadata" in top else None
     risk_measures = _risk(tc, top["risk"], "risk") if "risk" in top else []
 
-    if bag.has_errors or _none(psl_version, product, contract, underlyings, reference, schedule, components,
+    if bag.has_errors or _none(psl_version, product, contract, underlyings, reference, schedule, components, execution,
                                risk_measures):
         return None
 
     return PSLDocumentAST(
         psl_version=psl_version, product=product, contract=contract, underlyings=underlyings,
-        reference=reference, schedule=schedule, payoff_components=components, valuation=valuation,
+        reference=reference, schedule=schedule, payoff_components=components, execution=execution, valuation=valuation,
         risk_measures=risk_measures, metadata=metadata,
     )
 
@@ -149,7 +152,7 @@ def _underlying(tc: TypeChecker, raw: Any, path: str) -> Optional[UnderlyingDecl
 
 
 def _reference(tc: TypeChecker, raw: Any, path: str) -> Optional[ReferenceAggregationNode]:
-    d = tc.fields(raw, path, required=("aggregation", "underlyings"), optional=("performance",))
+    d = tc.fields(raw, path, required=("aggregation", "underlyings"))
     if d is None:
         return None
     aggregation = tc.enum(d.get("aggregation", MISSING), join(path, "aggregation"), Aggregation)
@@ -158,22 +161,9 @@ def _reference(tc: TypeChecker, raw: Any, path: str) -> Optional[ReferenceAggreg
     if seq is not None:
         parsed = [tc.identifier(v, f"{join(path, 'underlyings')}[{i}]") for i, v in enumerate(seq)]
         ids = None if any(p is None for p in parsed) else parsed
-    performance = None
-    ok_perf = True
-    if "performance" in d:
-        pp = join(path, "performance")
-        pm = tc.free_mapping(d["performance"], pp)
-        if pm is None:
-            ok_perf = False
-        else:
-            vals = {k: tc.string(v, join(pp, k)) for k, v in pm.items()}
-            if any(v is None for v in vals.values()):
-                ok_perf = False
-            else:
-                performance = vals
-    if _none(aggregation, ids) or not ok_perf:
+    if _none(aggregation, ids):
         return None
-    return ReferenceAggregationNode(aggregation=aggregation, underlyings=ids, performance=performance)
+    return ReferenceAggregationNode(aggregation=aggregation, underlyings=ids)
 
 
 def _schedule(tc: TypeChecker, raw: Any, path: str) -> Optional[ScheduleDeclaration]:
@@ -261,6 +251,10 @@ def _coupon(tc: TypeChecker, raw: Dict[str, Any], path: str) -> Optional[MemoryC
                 tc.bag.error("E-MISSING-FIELD",
                              "Field 'unpaid_coupon' is required when memory is enabled (no silent default).", mp)
                 ok_mem = False
+            if enabled is False and "unpaid_coupon" in md:
+                tc.bag.error("E-UNPAID-COUPON-WHEN-DISABLED",
+                             "Field 'unpaid_coupon' is forbidden when memory is disabled.", mp)
+                ok_mem = False
             if enabled is None:
                 ok_mem = False
             elif ok_mem:
@@ -299,6 +293,21 @@ def _capital(tc: TypeChecker, raw: Dict[str, Any], path: str) -> Optional[Capita
     if _none(id_, level, obs):
         return None
     return CapitalProtectionComponent(id=id_, barrier_level=level, observation=obs)
+
+
+
+def _execution(tc: TypeChecker, raw: Any, path: str) -> Optional[ExecutionTerms]:
+    mapping = tc.free_mapping(raw, path)
+    if mapping is None:
+        return None
+    try:
+        return ExecutionTerms.model_validate(mapping)
+    except ValidationError as exc:
+        for issue in exc.errors():
+            loc = ".".join(str(part) for part in issue.get("loc", ()))
+            diagnostic_path = f"{path}.{loc}" if loc else path
+            tc.bag.error("E-EXECUTION-TERMS", issue.get("msg", "Invalid execution terms."), diagnostic_path)
+        return None
 
 
 def _risk(tc: TypeChecker, raw: Any, path: str):

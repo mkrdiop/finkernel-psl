@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
 
+from finkernel.psl.ast.execution_terms import ExecutionTerms
 from finkernel.psl.types.financial_types import (
     Aggregation, BarrierObservation, BusinessDayConvention, CalendarId, ComparisonOperator,
     ComponentType, Currency, Frequency, LagUnit, RiskMeasure, UnderlyingType, UnpaidCouponPolicy,
@@ -63,7 +64,6 @@ class UnderlyingDeclaration(ASTNode):
 class ReferenceAggregationNode(ASTNode):
     aggregation: Aggregation
     underlyings: List[str]
-    performance: Optional[Dict[str, str]] = None
 
 
 class ObservationSchedule(ASTNode):
@@ -122,6 +122,7 @@ class PSLDocumentAST(ASTNode):
     reference: ReferenceAggregationNode
     schedule: ScheduleDeclaration
     payoff_components: List[PayoffComponent]
+    execution: ExecutionTerms
     valuation: Optional[Dict[str, Any]] = None
     risk_measures: List[RiskMeasure] = []
     metadata: Optional[Dict[str, Any]] = None

@@ -1,0 +1,147 @@
+{
+  "fir_version": "1.0",
+  "product": {
+    "id": "FK-PHOENIX-001",
+    "name": "Phoenix Autocallable Worst-of",
+    "category": "structured_product",
+    "subtype": "phoenix_autocallable",
+    "currency": "EUR"
+  },
+  "terms": {
+    "notional": {
+      "amount": "100000",
+      "currency": "EUR"
+    },
+    "inception_date": "2027-01-15",
+    "maturity_date": "2032-01-15",
+    "settlement": {
+      "currency": "EUR",
+      "payment_lag": 3,
+      "payment_lag_unit": "business_days"
+    }
+  },
+  "underlyings": [
+    {
+      "id": "NKY",
+      "type": "equity_index",
+      "name": "Nikkei 225",
+      "currency": "JPY",
+      "market_identifier": {
+        "scheme": "INDEX",
+        "value": "NKY"
+      }
+    },
+    {
+      "id": "SPX",
+      "type": "equity_index",
+      "name": "S&P 500",
+      "currency": "USD",
+      "market_identifier": {
+        "scheme": "INDEX",
+        "value": "SPX"
+      }
+    },
+    {
+      "id": "SX5E",
+      "type": "equity_index",
+      "name": "EURO STOXX 50",
+      "currency": "EUR",
+      "market_identifier": {
+        "scheme": "ISIN",
+        "value": "EU0009658145"
+      }
+    }
+  ],
+  "reference": {
+    "aggregation": "WORST_OF",
+    "underlyings": [
+      "NKY",
+      "SPX",
+      "SX5E"
+    ]
+  },
+  "observation_schedule": {
+    "frequency": "quarterly",
+    "first_observation": "2027-04-15",
+    "calendar": "TARGET",
+    "business_day_convention": "modified_following"
+  },
+  "components": [
+    {
+      "id": "coupon",
+      "kind": "MEMORY_COUPON",
+      "params": {
+        "annual_rate": "0.1",
+        "condition": {
+          "reference": "worst_of_performance",
+          "operator": "GTE",
+          "threshold": "0.7"
+        },
+        "memory": {
+          "enabled": true,
+          "unpaid_coupon": "accumulate"
+        }
+      }
+    },
+    {
+      "id": "autocall",
+      "kind": "AUTOCALL",
+      "params": {
+        "start_observation": 2,
+        "trigger": {
+          "reference": "worst_of_performance",
+          "operator": "GTE",
+          "threshold": "1"
+        },
+        "terminate_product": true
+      }
+    },
+    {
+      "id": "capital_redemption",
+      "kind": "CONDITIONAL_CAPITAL_PROTECTION",
+      "params": {
+        "barrier_level": "0.6",
+        "observation": "maturity"
+      }
+    }
+  ],
+  "execution_terms": {
+    "performance": {
+      "initial_fixing_date": "2027-01-14",
+      "initial_fixing_source": "initial_fixing_official_close",
+      "price_field": "official_close",
+      "formula": "price_over_initial",
+      "fx_treatment": "local_currency",
+      "fx_fixing_source": null,
+      "fx_quote_convention": null,
+      "quanto_rate": null,
+      "fx_fixing_date_rule": null,
+      "quanto_quote_convention": null
+    },
+    "coupon": {
+      "day_count": "ACT_365F",
+      "accrual_start_rule": "inception_date_for_first_period_then_previous_observation",
+      "accrual_end_rule": "observation_date",
+      "payment_date_rule": "observation_date",
+      "stub_rule": "short_first",
+      "rounding_decimals": 2,
+      "rounding_mode": "half_even"
+    },
+    "same_date_priority": [
+      "coupon",
+      "autocall",
+      "capital_redemption"
+    ],
+    "autocall_redemption": {
+      "principal_fraction": "1",
+      "unpaid_coupon_policy": "pay_all"
+    },
+    "maturity_redemption": {
+      "above_barrier_principal_fraction": "1",
+      "below_barrier_formula": "worst_of_performance",
+      "equality_treatment": "protected"
+    },
+    "settlement_calendar": "TARGET",
+    "settlement_business_day_convention": "modified_following"
+  }
+}

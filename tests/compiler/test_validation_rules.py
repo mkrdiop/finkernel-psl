@@ -72,11 +72,11 @@ def test_invalid_spec_is_rejected_with_expected_code(compiler, phoenix_data, pat
     assert "E-INTERNAL" not in codes(r)
 
 
-def test_unquoted_dates_are_accepted(compiler, phoenix_yaml):
-    """Avant : plantage 'Internal Compiler Error' car PyYAML produisait des datetime.date."""
+def test_unquoted_dates_are_rejected(compiler, phoenix_yaml):
     assert '"2027-01-15"' in phoenix_yaml
     r = compiler.compile(phoenix_yaml.replace('"2027-01-15"', "2027-01-15").replace('"2032-01-15"', "2032-01-15"))
-    assert r.success
+    assert not r.success and r.fir is None
+    assert "E-SYNTAX" in codes(r, "error")
 
 
 def test_unquoted_psl_version_gives_actionable_message(compiler, phoenix_yaml):
@@ -94,9 +94,9 @@ def test_unused_underlying_warns(compiler, phoenix_data):
     assert r.success and "W-UL-UNUSED" in codes(r, "warning")
 
 
-def test_unknown_subtype_is_only_a_warning(compiler, phoenix_data):
+def test_unknown_subtype_is_rejected_for_execution(compiler, phoenix_data):
     r = _compile(compiler, phoenix_data, "product.subtype", "exotic_thing")
-    assert r.success and "W-SUBTYPE-UNREGISTERED" in codes(r, "warning")
+    assert not r.success and r.fir is None and "E-SUBTYPE-UNREGISTERED" in codes(r, "error")
 
 
 def test_capital_barrier_above_coupon_barrier_warns(compiler, phoenix_data):

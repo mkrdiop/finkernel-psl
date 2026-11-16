@@ -15,9 +15,10 @@ def test_phoenix_compiles(compiler, phoenix_yaml):
     assert len(r.fir.components) == 3 and len(r.fir.underlyings) == 3
 
 
-def test_phoenix_warnings_surface_known_spec_gaps(compiler, phoenix_yaml):
+def test_execution_complete_phoenix_has_no_semantic_gap_warnings(compiler, phoenix_yaml):
     r = compiler.compile(phoenix_yaml)
-    assert set(codes(r, "warning")) == {
+    assert r.success and not r.errors
+    assert not {d.code for d in r.warnings} & {
         "W-FX-UNSPECIFIED", "W-REF-PERFORMANCE-UNSPECIFIED", "W-SAME-DATE-ORDER-UNSPECIFIED"}
 
 

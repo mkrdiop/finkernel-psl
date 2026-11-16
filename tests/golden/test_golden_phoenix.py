@@ -1,7 +1,7 @@
 """Golden test : la FIR canonique du Phoenix et son hash sont figés.
 
-Toute modification volontaire du schéma/de la sérialisation doit s'accompagner
-d'une régénération explicite de ces fichiers (et d'un incrément de fir_version).
+Ce snapshot fixe le premier contrat FIR 1.0 publié. Toute modification incompatible ultérieure
+du schéma ou de la sérialisation devra incrémenter fir_version et régénérer ces fichiers.
 """
 import json
 import os

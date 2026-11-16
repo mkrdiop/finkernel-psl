@@ -1,0 +1,39 @@
+name: Finkernel CI
+
+on:
+  push:
+    branches: ["main", "m1/**"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  compiler-quality-gate:
+    name: Compiler quality gate (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install compiler and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Validate versioned JSON Schemas
+        run: |
+          python -m json.tool schemas/psl/v1/psl.schema.json > /dev/null
+          python -m json.tool schemas/fir/v1/fir.schema.json > /dev/null
+      - name: Compile Python sources
+        run: python -m compileall -q src tests
+      - name: Run M1 compiler, schema, golden and property tests
+        run: pytest -q tests/unit tests/compiler tests/golden tests/property

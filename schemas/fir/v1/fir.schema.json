@@ -1,0 +1,829 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://finkernel.dev/schemas/fir/v1/fir.schema.json",
+  "title": "Finkernel FIR 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fir_version",
+    "product",
+    "terms",
+    "underlyings",
+    "reference",
+    "observation_schedule",
+    "components",
+    "execution_terms"
+  ],
+  "properties": {
+    "fir_version": {
+      "const": "1.0"
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "category",
+        "subtype",
+        "currency"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "subtype": {
+          "type": "string"
+        },
+        "currency": {
+          "enum": [
+            "EUR",
+            "USD",
+            "JPY",
+            "GBP",
+            "CHF",
+            "CAD",
+            "AUD",
+            "SEK",
+            "NOK",
+            "DKK"
+          ]
+        }
+      }
+    },
+    "terms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "notional",
+        "inception_date",
+        "maturity_date",
+        "settlement"
+      ],
+      "properties": {
+        "notional": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^(?:0\\.[0-9]*[1-9]|[1-9][0-9]*(?:\\.[0-9]*[1-9])?)$"
+            },
+            "currency": {
+              "enum": [
+                "EUR",
+                "USD",
+                "JPY",
+                "GBP",
+                "CHF",
+                "CAD",
+                "AUD",
+                "SEK",
+                "NOK",
+                "DKK"
+              ]
+            }
+          }
+        },
+        "inception_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "maturity_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "settlement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "currency",
+            "payment_lag",
+            "payment_lag_unit"
+          ],
+          "properties": {
+            "currency": {
+              "enum": [
+                "EUR",
+                "USD",
+                "JPY",
+                "GBP",
+                "CHF",
+                "CAD",
+                "AUD",
+                "SEK",
+                "NOK",
+                "DKK"
+              ]
+            },
+            "payment_lag": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "payment_lag_unit": {
+              "enum": [
+                "business_days",
+                "calendar_days"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "underlyings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name",
+          "currency",
+          "market_identifier"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "equity_index",
+              "equity"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "enum": [
+              "EUR",
+              "USD",
+              "JPY",
+              "GBP",
+              "CHF",
+              "CAD",
+              "AUD",
+              "SEK",
+              "NOK",
+              "DKK"
+            ]
+          },
+          "market_identifier": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "scheme",
+              "value"
+            ],
+            "properties": {
+              "scheme": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregation",
+        "underlyings"
+      ],
+      "properties": {
+        "aggregation": {
+          "enum": [
+            "WORST_OF",
+            "BEST_OF"
+          ]
+        },
+        "underlyings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        }
+      }
+    },
+    "observation_schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frequency",
+        "first_observation",
+        "calendar",
+        "business_day_convention"
+      ],
+      "properties": {
+        "frequency": {
+          "enum": [
+            "monthly",
+            "quarterly",
+            "semi_annual",
+            "annual"
+          ]
+        },
+        "first_observation": {
+          "type": "string",
+          "format": "date"
+        },
+        "calendar": {
+          "enum": [
+            "TARGET",
+            "NYSE",
+            "TOKYO",
+            "LONDON"
+          ]
+        },
+        "business_day_convention": {
+          "enum": [
+            "following",
+            "modified_following",
+            "preceding",
+            "modified_preceding",
+            "unadjusted"
+          ]
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "params"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "MEMORY_COUPON"
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "annual_rate",
+                  "condition",
+                  "memory"
+                ],
+                "properties": {
+                  "annual_rate": {
+                    "type": "string",
+                    "pattern": "^(?:0|0\\.[0-9]*[1-9]|1)$"
+                  },
+                  "condition": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "reference",
+                      "operator",
+                      "threshold"
+                    ],
+                    "properties": {
+                      "reference": {
+                        "type": "string"
+                      },
+                      "operator": {
+                        "enum": [
+                          "GTE",
+                          "GT",
+                          "LTE",
+                          "LT"
+                        ]
+                      },
+                      "threshold": {
+                        "type": "string",
+                        "pattern": "^(?:0\\.[0-9]*[1-9]|1(?:\\.[0-9]*[1-9])?|2)$"
+                      }
+                    }
+                  },
+                  "memory": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "unpaid_coupon": {
+                        "const": "accumulate"
+                      }
+                    },
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "enabled": {
+                              "const": true
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ]
+                        },
+                        "then": {
+                          "required": [
+                            "unpaid_coupon"
+                          ]
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "enabled": {
+                              "const": false
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ]
+                        },
+                        "then": {
+                          "not": {
+                            "required": [
+                              "unpaid_coupon"
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "params"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "AUTOCALL"
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "start_observation",
+                  "trigger",
+                  "terminate_product"
+                ],
+                "properties": {
+                  "start_observation": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "trigger": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "reference",
+                      "operator",
+                      "threshold"
+                    ],
+                    "properties": {
+                      "reference": {
+                        "type": "string"
+                      },
+                      "operator": {
+                        "enum": [
+                          "GTE",
+                          "GT",
+                          "LTE",
+                          "LT"
+                        ]
+                      },
+                      "threshold": {
+                        "type": "string",
+                        "pattern": "^(?:0\\.[0-9]*[1-9]|1(?:\\.[0-9]*[1-9])?|2)$"
+                      }
+                    }
+                  },
+                  "terminate_product": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "params"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "CONDITIONAL_CAPITAL_PROTECTION"
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "barrier_level",
+                  "observation"
+                ],
+                "properties": {
+                  "barrier_level": {
+                    "type": "string",
+                    "pattern": "^(?:0\\.[0-9]*[1-9]|1(?:\\.[0-9]*[1-9])?|2)$"
+                  },
+                  "observation": {
+                    "const": "maturity"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "execution_terms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "performance",
+        "coupon",
+        "same_date_priority",
+        "autocall_redemption",
+        "maturity_redemption",
+        "settlement_calendar",
+        "settlement_business_day_convention"
+      ],
+      "properties": {
+        "performance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "initial_fixing_date",
+            "initial_fixing_source",
+            "price_field",
+            "formula",
+            "fx_treatment",
+            "fx_fixing_date_rule",
+            "fx_fixing_source",
+            "fx_quote_convention",
+            "quanto_rate",
+            "quanto_quote_convention"
+          ],
+          "properties": {
+            "initial_fixing_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "initial_fixing_source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "price_field": {
+              "enum": [
+                "close",
+                "official_close",
+                "adjusted_close"
+              ]
+            },
+            "formula": {
+              "const": "price_over_initial"
+            },
+            "fx_treatment": {
+              "enum": [
+                "local_currency",
+                "convert_to_product_currency",
+                "quanto"
+              ]
+            },
+            "fx_fixing_source": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "fx_quote_convention": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "product_per_underlying",
+                "underlying_per_product",
+                null
+              ]
+            },
+            "quanto_rate": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^(?:0\\.[0-9]*[1-9]|[1-9][0-9]*(?:\\.[0-9]*[1-9])?)$"
+            },
+            "fx_fixing_date_rule": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "initial_and_observation_fixings",
+                null
+              ]
+            },
+            "quanto_quote_convention": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "product_per_underlying",
+                "underlying_per_product",
+                null
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "fx_treatment": {
+                    "const": "convert_to_product_currency"
+                  }
+                },
+                "required": [
+                  "fx_treatment"
+                ]
+              },
+              "then": {
+                "required": [
+                  "fx_fixing_date_rule",
+                  "fx_fixing_source",
+                  "fx_quote_convention"
+                ],
+                "properties": {
+                  "fx_fixing_date_rule": {
+                    "const": "initial_and_observation_fixings"
+                  },
+                  "fx_fixing_source": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fx_quote_convention": {
+                    "enum": [
+                      "product_per_underlying",
+                      "underlying_per_product"
+                    ]
+                  },
+                  "quanto_rate": {
+                    "type": "null"
+                  },
+                  "quanto_quote_convention": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "fx_treatment": {
+                    "const": "quanto"
+                  }
+                },
+                "required": [
+                  "fx_treatment"
+                ]
+              },
+              "then": {
+                "required": [
+                  "quanto_rate",
+                  "quanto_quote_convention"
+                ],
+                "properties": {
+                  "quanto_rate": {
+                    "type": "string",
+                    "pattern": "^(?:0\\.[0-9]*[1-9]|[1-9][0-9]*(?:\\.[0-9]*[1-9])?)$"
+                  },
+                  "quanto_quote_convention": {
+                    "enum": [
+                      "product_per_underlying",
+                      "underlying_per_product"
+                    ]
+                  },
+                  "fx_fixing_date_rule": {
+                    "type": "null"
+                  },
+                  "fx_fixing_source": {
+                    "type": "null"
+                  },
+                  "fx_quote_convention": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "fx_treatment": {
+                    "const": "local_currency"
+                  }
+                },
+                "required": [
+                  "fx_treatment"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "fx_fixing_date_rule": {
+                    "type": "null"
+                  },
+                  "fx_fixing_source": {
+                    "type": "null"
+                  },
+                  "fx_quote_convention": {
+                    "type": "null"
+                  },
+                  "quanto_rate": {
+                    "type": "null"
+                  },
+                  "quanto_quote_convention": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "coupon": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "day_count",
+            "accrual_start_rule",
+            "accrual_end_rule",
+            "payment_date_rule",
+            "stub_rule",
+            "rounding_decimals",
+            "rounding_mode"
+          ],
+          "properties": {
+            "day_count": {
+              "enum": [
+                "ACT_360",
+                "ACT_365F",
+                "30_360"
+              ]
+            },
+            "accrual_start_rule": {
+              "const": "inception_date_for_first_period_then_previous_observation"
+            },
+            "accrual_end_rule": {
+              "const": "observation_date"
+            },
+            "payment_date_rule": {
+              "const": "observation_date"
+            },
+            "stub_rule": {
+              "enum": [
+                "short_first",
+                "long_first",
+                "short_last",
+                "long_last"
+              ]
+            },
+            "rounding_decimals": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "rounding_mode": {
+              "enum": [
+                "half_even",
+                "half_up",
+                "down"
+              ]
+            }
+          }
+        },
+        "same_date_priority": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "coupon",
+              "autocall",
+              "capital_redemption"
+            ]
+          }
+        },
+        "autocall_redemption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "principal_fraction",
+            "unpaid_coupon_policy"
+          ],
+          "properties": {
+            "principal_fraction": {
+              "type": "string",
+              "pattern": "^(?:0\\.[0-9]*[1-9]|[1-9][0-9]*(?:\\.[0-9]*[1-9])?)$"
+            },
+            "unpaid_coupon_policy": {
+              "enum": [
+                "pay_all",
+                "forfeit"
+              ]
+            }
+          }
+        },
+        "maturity_redemption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "above_barrier_principal_fraction",
+            "below_barrier_formula",
+            "equality_treatment"
+          ],
+          "properties": {
+            "above_barrier_principal_fraction": {
+              "type": "string",
+              "pattern": "^(?:0\\.[0-9]*[1-9]|[1-9][0-9]*(?:\\.[0-9]*[1-9])?)$"
+            },
+            "below_barrier_formula": {
+              "const": "worst_of_performance"
+            },
+            "equality_treatment": {
+              "enum": [
+                "protected",
+                "unprotected"
+              ]
+            }
+          }
+        },
+        "settlement_calendar": {
+          "enum": [
+            "TARGET",
+            "NYSE",
+            "TOKYO",
+            "LONDON"
+          ]
+        },
+        "settlement_business_day_convention": {
+          "enum": [
+            "following",
+            "modified_following",
+            "preceding",
+            "modified_preceding",
+            "unadjusted"
+          ]
+        }
+      }
+    }
+  }
+}

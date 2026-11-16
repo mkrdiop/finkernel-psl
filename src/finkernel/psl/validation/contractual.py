@@ -7,6 +7,7 @@ from finkernel.core.diagnostics import DiagnosticBag
 from finkernel.psl.ast.nodes import (
     AutocallComponent, CapitalProtectionComponent, MemoryCouponComponent, PSLDocumentAST,
 )
+from finkernel.psl.types.financial_types import Aggregation
 from finkernel.psl.validation import rules
 from finkernel.psl.validation.schedule_grid import observation_dates
 
@@ -15,10 +16,16 @@ def validate_contract(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
     subtype = ast.product.subtype
     required = rules.REQUIRED_COMPONENTS.get(subtype)
     if required is None:
-        bag.warning("W-SUBTYPE-UNREGISTERED",
-                    f"No contractual rules are registered for subtype '{subtype}'; completeness of the "
-                    "contract was not checked.", "product.subtype")
+        bag.error("E-SUBTYPE-UNREGISTERED",
+                  f"No contractual rules are registered for subtype '{subtype}'; executable completeness cannot be established.",
+                  "product.subtype")
         return
+
+    if subtype == "phoenix_autocallable" and ast.reference.aggregation != Aggregation.WORST_OF:
+        bag.error("E-PHOENIX-AGGREGATION",
+                  "PSL 1.0 Phoenix maturity redemption is defined on worst_of_performance; "
+                  "phoenix_autocallable therefore requires WORST_OF aggregation.",
+                  "reference.aggregation")
 
     counts = Counter(c.type for c in ast.payoff_components)
     for ctype in required:
@@ -36,6 +43,11 @@ def validate_contract(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
     autocall = next((c for c in ast.payoff_components if isinstance(c, AutocallComponent)), None)
     capital = next((c for c in ast.payoff_components if isinstance(c, CapitalProtectionComponent)), None)
     idx = {id(c): i for i, c in enumerate(ast.payoff_components)}
+
+    if coupon is not None and coupon.memory is None:
+        bag.error("E-COUPON-MEMORY-UNSPECIFIED",
+                  "Memory behavior must be explicit; set memory.enabled true or false.",
+                  f"payoff.components[{idx[id(coupon)]}].memory")
 
     if autocall is not None:
         base = f"payoff.components[{idx[id(autocall)]}]"
@@ -62,7 +74,3 @@ def validate_contract(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
                     f"({coupon.condition.threshold}); this is unusual for a Phoenix.",
                     f"payoff.components[{idx[id(capital)]}].barrier.level")
 
-    if coupon is not None and autocall is not None:
-        bag.warning("W-SAME-DATE-ORDER-UNSPECIFIED",
-                    "Coupon and autocall can both trigger on the same observation date; the evaluation and "
-                    "payment order is not specified in the contract (blueprint §5.2).", "payoff.components")

@@ -5,7 +5,7 @@
 * clés dupliquées rejetées, clés non-chaînes rejetées ;
 * ancres/alias rejetés (pas d'expansion exponentielle, pas de merge ``<<``) ;
 * ``yes/no/on/off`` restent des chaînes (problème « NO » = faux) ;
-* les dates restent des chaînes (validées ensuite, strictement, en ISO-8601) ;
+* les dates ISO non citées sont typées comme dates YAML et rejetées : PSL exige des dates citées ;
 * les entiers sont en base 10 stricte (``010`` n'est PAS 8) ;
 * les nombres décimaux sont lus comme ``Decimal`` depuis leur littéral exact,
   jamais comme ``float``.
@@ -54,6 +54,7 @@ class StrictPSLLoader(yaml.SafeLoader):
 _add = StrictPSLLoader.add_implicit_resolver
 _add("tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF"))
 _add("tag:yaml.org,2002:null", re.compile(r"^(?:~|null|Null|NULL|)$"), ["~", "n", "N", ""])
+_add("tag:yaml.org,2002:timestamp", re.compile(r"^\d{4}-\d{2}-\d{2}$"), list("0123456789"))
 _add("tag:yaml.org,2002:int", re.compile(r"^[-+]?(?:0|[1-9][0-9]*)$"), list("-+0123456789"))
 _add(
     "tag:yaml.org,2002:float",
@@ -87,6 +88,15 @@ def _construct_decimal(loader: yaml.Loader, node: yaml.Node) -> Decimal:
     return value
 
 
+def _reject_unquoted_date(loader: yaml.Loader, node: yaml.Node):
+    raise PSLSyntaxError(
+        "Date literals must be quoted using YYYY-MM-DD format.",
+        line=node.start_mark.line + 1,
+        column=node.start_mark.column + 1,
+    )
+
+
+StrictPSLLoader.add_constructor("tag:yaml.org,2002:timestamp", _reject_unquoted_date)
 StrictPSLLoader.add_constructor("tag:yaml.org,2002:int", _construct_int)
 StrictPSLLoader.add_constructor("tag:yaml.org,2002:float", _construct_decimal)
 

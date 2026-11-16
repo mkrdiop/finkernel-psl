@@ -46,3 +46,19 @@ day count, montant versé à l'autocall, formule de remboursement sous la barri�
 ## Reste à faire (hors périmètre de ce patch)
 Génération d'événements (`events`), calendriers/jours ouvrés, runtime et cashflows, exemples Reverse Convertible et Swap
 (+ leurs types de composants), schéma JSON versionné de FIR (`schemas/fir/v1`), CI, ADR, API.
+
+
+## 2026-11-16 — M1 PSL 1.0 execution contract and compiler gate
+
+- Published `docs/PSL_1.0_SPEC.md` as the normative language contract and linked it from the README.
+- Added mandatory typed `execution` terms to the PSL AST. The compiler now fails closed for missing/unknown execution fields, invalid dates and enums, unsupported product subtypes, implicit coupon-memory behavior, invalid FX/quanto declarations, and incomplete event/redemption terms.
+- Defined normalized underlying performance as `price_over_initial` (a ratio, not a return percentage). FX conversion explicitly declares initial/observation fixing rule, source and quote convention; quanto declares a fixed positive rate and quote convention; local-currency performance is an explicit third mode.
+- Made coupon accrual start, day count, payment date, stub and rounding conventions explicit. Same-date event precedence is a complete permutation; autocall and maturity redemption rules are explicit.
+- Removed the untyped `reference.performance` mapping. Execution semantics are now located only at `execution.performance`.
+- Added strict Pydantic execution AST models and typed canonical FIR execution nodes. Execution terms are part of FIR contract content and therefore affect `contract_hash`; valuation/risk hashes remain independent.
+- Published `schemas/psl/v1/psl.schema.json` and `schemas/fir/v1/fir.schema.json`, including discriminated FIR payoff components.
+- Updated the Phoenix reference fixture and canonical FIR 1.0 golden contract/hash. Added negative, schema-conformance, hash-sensitivity and typed-FIR tests.
+- Added GitHub Actions compiler CI across Python 3.10, 3.11 and 3.12. The M1 gate runs unit/compiler/schema/golden/property suites; legacy runtime tests remain outside this gate because M2 is not authorized and the existing runtime test fixture targets an obsolete PSL shape.
+- First CI attempt exposed the runtime test's undeclared NumPy import; CI was scoped to the compiler quality gate rather than hiding or weakening that test. Latest M1 CI run #43873085428 passed across Python 3.10, 3.11 and 3.12: 124 tests passed on each version.
+
+**M2 remains blocked** until the M1 PR is reviewed, all three Python CI jobs pass on the latest commit, and the PSL/FIR contracts are accepted.
