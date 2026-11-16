@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://finkernel.dev/schemas/psl/v1/psl.schema.json",
+  "title": "Finkernel PSL 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["psl_version", "product", "contract", "underlyings", "reference", "schedule", "payoff", "execution"],
+  "properties": {
+    "psl_version": {"const": "1.0"},
+    "product": {"$ref": "#/$defs/product"},
+    "contract": {"$ref": "#/$defs/contract"},
+    "underlyings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/underlying"}},
+    "reference": {"$ref": "#/$defs/reference"},
+    "schedule": {"$ref": "#/$defs/schedule"},
+    "payoff": {"type": "object", "additionalProperties": false, "required": ["components"], "properties": {"components": {"type": "array", "minItems": 1, "items": {"oneOf": [{"$ref": "#/$defs/coupon"}, {"$ref": "#/$defs/autocall"}, {"$ref": "#/$defs/capital"}]}}}},
+    "execution": {"$ref": "#/$defs/execution"},
+    "valuation": {"type": "object"},
+    "risk": {"type": "object", "additionalProperties": false, "properties": {"measures": {"type": "array", "items": {"enum": ["delta", "gamma", "vega", "theta", "rho", "value_at_risk"]}}}},
+    "metadata": {"type": "object"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"},
+    "date": {"type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "currency": {"enum": ["EUR", "USD", "JPY", "GBP", "CHF", "CAD", "AUD", "SEK", "NOK", "DKK"]},
+    "ratio": {"type": "number", "exclusiveMinimum": 0, "maximum": 2},
+    "product": {"type": "object", "additionalProperties": false, "required": ["id", "name", "category", "subtype", "currency"], "properties": {"id": {"$ref": "#/$defs/id"}, "name": {"type": "string", "minLength": 1}, "category": {"$ref": "#/$defs/id"}, "subtype": {"$ref": "#/$defs/id"}, "currency": {"$ref": "#/$defs/currency"}}},
+    "contract": {"type": "object", "additionalProperties": false, "required": ["notional", "inception_date", "maturity_date", "settlement"], "properties": {"notional": {"type": "object", "additionalProperties": false, "required": ["amount", "currency"], "properties": {"amount": {"type": "number", "exclusiveMinimum": 0}, "currency": {"$ref": "#/$defs/currency"}}}, "inception_date": {"$ref": "#/$defs/date"}, "maturity_date": {"$ref": "#/$defs/date"}, "settlement": {"type": "object", "additionalProperties": false, "required": ["currency", "payment_lag", "payment_lag_unit"], "properties": {"currency": {"$ref": "#/$defs/currency"}, "payment_lag": {"type": "integer", "minimum": 0, "maximum": 30}, "payment_lag_unit": {"enum": ["business_days", "calendar_days"]}}}}},
+    "underlying": {"type": "object", "additionalProperties": false, "required": ["id", "type", "name", "currency"], "properties": {"id": {"$ref": "#/$defs/id"}, "type": {"enum": ["equity_index", "equity"]}, "name": {"type": "string"}, "currency": {"$ref": "#/$defs/currency"}, "market_identifier": {"type": "object", "additionalProperties": false, "required": ["scheme", "value"], "properties": {"scheme": {"type": "string"}, "value": {"type": "string"}}}}},
+    "reference": {"type": "object", "additionalProperties": false, "required": ["aggregation", "underlyings"], "properties": {"aggregation": {"enum": ["WORST_OF", "BEST_OF"]}, "underlyings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}},
+    "schedule": {"type": "object", "additionalProperties": false, "required": ["observation_schedule"], "properties": {"observation_schedule": {"type": "object", "additionalProperties": false, "required": ["frequency", "first_observation", "calendar", "business_day_convention"], "properties": {"frequency": {"enum": ["monthly", "quarterly", "semi_annual", "annual"]}, "first_observation": {"$ref": "#/$defs/date"}, "calendar": {"enum": ["TARGET", "NYSE", "TOKYO", "LONDON"]}, "business_day_convention": {"enum": ["following", "modified_following", "preceding", "modified_preceding", "unadjusted"]}}}}},
+    "condition": {"type": "object", "additionalProperties": false, "required": ["reference", "operator", "threshold"], "properties": {"reference": {"$ref": "#/$defs/id"}, "operator": {"enum": ["GTE", "GT", "LTE", "LT"]}, "threshold": {"$ref": "#/$defs/ratio"}}},
+    "coupon": {"type": "object", "additionalProperties": false, "required": ["id", "type", "annual_rate", "condition"], "properties": {"id": {"$ref": "#/$defs/id"}, "type": {"const": "memory_coupon"}, "annual_rate": {"type": "number", "minimum": 0, "maximum": 1}, "condition": {"$ref": "#/$defs/condition"}, "memory": {"type": "object", "additionalProperties": false, "required": ["enabled"], "properties": {"enabled": {"type": "boolean"}, "unpaid_coupon": {"const": "accumulate"}}}}},
+    "autocall": {"type": "object", "additionalProperties": false, "required": ["id", "type", "eligibility", "trigger", "terminate_product"], "properties": {"id": {"$ref": "#/$defs/id"}, "type": {"const": "autocall"}, "eligibility": {"type": "object", "additionalProperties": false, "required": ["start_observation"], "properties": {"start_observation": {"type": "integer", "minimum": 1}}}, "trigger": {"$ref": "#/$defs/condition"}, "terminate_product": {"const": true}}},
+    "capital": {"type": "object", "additionalProperties": false, "required": ["id", "type", "barrier", "observation"], "properties": {"id": {"$ref": "#/$defs/id"}, "type": {"const": "conditional_capital_protection"}, "barrier": {"type": "object", "additionalProperties": false, "required": ["level"], "properties": {"level": {"$ref": "#/$defs/ratio"}}}, "observation": {"const": "maturity"}}},
+    "execution": {"type": "object", "additionalProperties": false, "required": ["performance", "coupon", "same_date_priority", "autocall_redemption", "maturity_redemption", "settlement_calendar", "settlement_business_day_convention"], "properties": {
+      "performance": {"type": "object", "additionalProperties": false, "required": ["initial_fixing_date", "initial_fixing_source", "price_field", "formula", "fx_treatment"], "properties": {"initial_fixing_date": {"$ref": "#/$defs/date"}, "initial_fixing_source": {"type": "string", "minLength": 1}, "price_field": {"enum": ["close", "official_close", "adjusted_close"]}, "formula": {"const": "price_over_initial_minus_one"}, "fx_treatment": {"enum": ["local_currency", "convert_to_product_currency", "quanto"]}, "fx_fixing_date": {"$ref": "#/$defs/date"}, "fx_fixing_source": {"type": "string"}, "fx_quote_convention": {"enum": ["product_per_underlying", "underlying_per_product"]}}},
+      "coupon": {"type": "object", "additionalProperties": false, "required": ["day_count", "accrual_start_rule", "accrual_end_rule", "payment_date_rule", "stub_rule", "rounding_decimals", "rounding_mode"], "properties": {"day_count": {"enum": ["ACT_360", "ACT_365F", "30_360"]}, "accrual_start_rule": {"enum": ["inception_date", "previous_observation"]}, "accrual_end_rule": {"const": "observation_date"}, "payment_date_rule": {"const": "observation_date"}, "stub_rule": {"enum": ["short_first", "long_first", "short_last", "long_last"]}, "rounding_decimals": {"type": "integer", "minimum": 0, "maximum": 8}, "rounding_mode": {"enum": ["half_even", "half_up", "down"]}}},
+      "same_date_priority": {"type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": {"enum": ["coupon", "autocall", "capital_redemption"]}},
+      "autocall_redemption": {"type": "object", "additionalProperties": false, "required": ["principal_fraction", "unpaid_coupon_policy"], "properties": {"principal_fraction": {"type": "number", "exclusiveMinimum": 0}, "unpaid_coupon_policy": {"enum": ["pay_all", "forfeit"]}}},
+      "maturity_redemption": {"type": "object", "additionalProperties": false, "required": ["above_barrier_principal_fraction", "below_barrier_formula", "equality_treatment"], "properties": {"above_barrier_principal_fraction": {"type": "number", "exclusiveMinimum": 0}, "below_barrier_formula": {"const": "worst_of_performance"}, "equality_treatment": {"enum": ["protected", "unprotected"]}}},
+      "settlement_calendar": {"enum": ["TARGET", "NYSE", "TOKYO", "LONDON"]},
+      "settlement_business_day_convention": {"enum": ["following", "modified_following", "preceding", "modified_preceding", "unadjusted"]}
+    }}
+  }
+}
