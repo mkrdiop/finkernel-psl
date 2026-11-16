@@ -112,10 +112,11 @@
       "price_field": "official_close",
       "formula": "price_over_initial",
       "fx_treatment": "local_currency",
-      "fx_fixing_date": null,
       "fx_fixing_source": null,
       "fx_quote_convention": null,
-      "quanto_rate": null
+      "quanto_rate": null,
+      "fx_fixing_date_rule": null,
+      "quanto_quote_convention": null
     },
     "coupon": {
       "day_count": "ACT_365F",
