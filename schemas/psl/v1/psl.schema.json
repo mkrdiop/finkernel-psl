@@ -502,7 +502,7 @@
               ]
             },
             "formula": {
-              "const": "price_over_initial_minus_one"
+              "const": "price_over_initial"
             },
             "fx_treatment": {
               "enum": [
@@ -625,8 +625,7 @@
             },
             "accrual_start_rule": {
               "enum": [
-                "inception_date",
-                "previous_observation"
+                "inception_date_for_first_period_then_previous_observation"
               ]
             },
             "accrual_end_rule": {
