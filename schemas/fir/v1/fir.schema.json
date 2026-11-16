@@ -4,15 +4,401 @@
   "title": "Finkernel FIR 1.0",
   "type": "object",
   "additionalProperties": false,
-  "required": ["fir_version", "product", "terms", "underlyings", "reference", "observation_schedule", "components", "execution_terms"],
+  "required": [
+    "fir_version",
+    "product",
+    "terms",
+    "underlyings",
+    "reference",
+    "observation_schedule",
+    "components",
+    "execution_terms"
+  ],
   "properties": {
-    "fir_version": {"const": "1.0"},
-    "product": {"type": "object", "additionalProperties": false, "required": ["id", "name", "category", "subtype", "currency"], "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "category": {"type": "string"}, "subtype": {"type": "string"}, "currency": {"type": "string"}}},
-    "terms": {"type": "object", "additionalProperties": false, "required": ["notional", "inception_date", "maturity_date", "settlement"], "properties": {"notional": {"type": "object", "additionalProperties": false, "required": ["amount", "currency"], "properties": {"amount": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"}, "currency": {"type": "string"}}}, "inception_date": {"type": "string", "format": "date"}, "maturity_date": {"type": "string", "format": "date"}, "settlement": {"type": "object", "additionalProperties": false, "required": ["currency", "payment_lag", "payment_lag_unit"], "properties": {"currency": {"type": "string"}, "payment_lag": {"type": "integer"}, "payment_lag_unit": {"type": "string"}}}}},
-    "underlyings": {"type": "array", "items": {"type": "object", "required": ["id", "type", "name", "currency"], "properties": {"id": {"type": "string"}, "type": {"type": "string"}, "name": {"type": "string"}, "currency": {"type": "string"}, "market_identifier": {"type": ["object", "null"]}}}},
-    "reference": {"type": "object", "additionalProperties": false, "required": ["aggregation", "underlyings"], "properties": {"aggregation": {"type": "string"}, "underlyings": {"type": "array", "items": {"type": "string"}}}},
-    "observation_schedule": {"type": "object", "additionalProperties": false, "required": ["frequency", "first_observation", "calendar", "business_day_convention"], "properties": {"frequency": {"type": "string"}, "first_observation": {"type": "string", "format": "date"}, "calendar": {"type": "string"}, "business_day_convention": {"type": "string"}}},
-    "components": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "kind", "params"], "properties": {"id": {"type": "string"}, "kind": {"type": "string"}, "params": {"type": "object"}}}},
-    "execution_terms": {"type": "object", "additionalProperties": false, "required": ["performance", "coupon", "same_date_priority", "autocall_redemption", "maturity_redemption", "settlement_calendar", "settlement_business_day_convention"], "properties": {"performance": {"type": "object"}, "coupon": {"type": "object"}, "same_date_priority": {"type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true}, "autocall_redemption": {"type": "object"}, "maturity_redemption": {"type": "object"}, "settlement_calendar": {"type": "string"}, "settlement_business_day_convention": {"type": "string"}}}
+    "fir_version": {
+      "const": "1.0"
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "category",
+        "subtype",
+        "currency"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "subtype": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        }
+      }
+    },
+    "terms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "notional",
+        "inception_date",
+        "maturity_date",
+        "settlement"
+      ],
+      "properties": {
+        "notional": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "properties": {
+            "amount": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "currency": {
+              "type": "string"
+            }
+          }
+        },
+        "inception_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "maturity_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "settlement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "currency",
+            "payment_lag",
+            "payment_lag_unit"
+          ],
+          "properties": {
+            "currency": {
+              "type": "string"
+            },
+            "payment_lag": {
+              "type": "integer"
+            },
+            "payment_lag_unit": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "underlyings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "name",
+          "currency"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "market_identifier": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregation",
+        "underlyings"
+      ],
+      "properties": {
+        "aggregation": {
+          "type": "string"
+        },
+        "underlyings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "observation_schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frequency",
+        "first_observation",
+        "calendar",
+        "business_day_convention"
+      ],
+      "properties": {
+        "frequency": {
+          "type": "string"
+        },
+        "first_observation": {
+          "type": "string",
+          "format": "date"
+        },
+        "calendar": {
+          "type": "string"
+        },
+        "business_day_convention": {
+          "type": "string"
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "params"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "execution_terms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "performance",
+        "coupon",
+        "same_date_priority",
+        "autocall_redemption",
+        "maturity_redemption",
+        "settlement_calendar",
+        "settlement_business_day_convention"
+      ],
+      "properties": {
+        "performance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "initial_fixing_date",
+            "initial_fixing_source",
+            "price_field",
+            "formula",
+            "fx_treatment"
+          ],
+          "properties": {
+            "initial_fixing_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "initial_fixing_source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "price_field": {
+              "enum": [
+                "close",
+                "official_close",
+                "adjusted_close"
+              ]
+            },
+            "formula": {
+              "const": "price_over_initial"
+            },
+            "fx_treatment": {
+              "enum": [
+                "local_currency",
+                "convert_to_product_currency",
+                "quanto"
+              ]
+            },
+            "fx_fixing_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "fx_fixing_source": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "fx_quote_convention": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "product_per_underlying",
+                "underlying_per_product",
+                null
+              ]
+            },
+            "quanto_rate": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9]+(\\\\.[0-9]+)?$"
+            }
+          }
+        },
+        "coupon": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "day_count",
+            "accrual_start_rule",
+            "accrual_end_rule",
+            "payment_date_rule",
+            "stub_rule",
+            "rounding_decimals",
+            "rounding_mode"
+          ],
+          "properties": {
+            "day_count": {
+              "enum": [
+                "ACT_360",
+                "ACT_365F",
+                "30_360"
+              ]
+            },
+            "accrual_start_rule": {
+              "const": "inception_date_for_first_period_then_previous_observation"
+            },
+            "accrual_end_rule": {
+              "const": "observation_date"
+            },
+            "payment_date_rule": {
+              "const": "observation_date"
+            },
+            "stub_rule": {
+              "enum": [
+                "short_first",
+                "long_first",
+                "short_last",
+                "long_last"
+              ]
+            },
+            "rounding_decimals": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "rounding_mode": {
+              "enum": [
+                "half_even",
+                "half_up",
+                "down"
+              ]
+            }
+          }
+        },
+        "same_date_priority": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "coupon",
+              "autocall",
+              "capital_redemption"
+            ]
+          }
+        },
+        "autocall_redemption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "principal_fraction",
+            "unpaid_coupon_policy"
+          ],
+          "properties": {
+            "principal_fraction": {
+              "type": "string",
+              "pattern": "^[0-9]+(\\\\.[0-9]+)?$"
+            },
+            "unpaid_coupon_policy": {
+              "enum": [
+                "pay_all",
+                "forfeit"
+              ]
+            }
+          }
+        },
+        "maturity_redemption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "above_barrier_principal_fraction",
+            "below_barrier_formula",
+            "equality_treatment"
+          ],
+          "properties": {
+            "above_barrier_principal_fraction": {
+              "type": "string",
+              "pattern": "^[0-9]+(\\\\.[0-9]+)?$"
+            },
+            "below_barrier_formula": {
+              "const": "worst_of_performance"
+            },
+            "equality_treatment": {
+              "enum": [
+                "protected",
+                "unprotected"
+              ]
+            }
+          }
+        },
+        "settlement_calendar": {
+          "type": "string"
+        },
+        "settlement_business_day_convention": {
+          "type": "string"
+        }
+      }
+    }
   }
 }
