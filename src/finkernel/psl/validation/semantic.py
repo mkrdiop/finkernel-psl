@@ -13,12 +13,7 @@ def validate_semantics(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
     _underlyings(ast, bag)
     _component_ids(ast, bag)
     _condition_references(ast, bag)
-    if ast.reference.performance is None:
-        bag.warning(
-            "W-REF-PERFORMANCE-UNSPECIFIED",
-            "'reference.performance' is not specified: the initial fixing (strike) date and the "
-            "performance formula are undefined.", "reference",
-        )
+    _execution_terms(ast, bag)
 
 
 def _currencies(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
@@ -32,10 +27,10 @@ def _currencies(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
                   f"Settlement currency ({ast.contract.settlement.currency.value}) differs from product currency "
                   f"({pccy.value}).", "contract.settlement.currency")
     foreign = sorted({u.currency.value for u in ast.underlyings if u.currency != pccy})
-    if foreign:
-        bag.warning("W-FX-UNSPECIFIED",
-                    f"Underlyings are denominated in {foreign} while the product currency is {pccy.value}; "
-                    "FX/quanto treatment is not specified.", "underlyings")
+    treatment = ast.execution.performance.fx_treatment
+    if not foreign and treatment != "local_currency":
+        bag.error("E-FX-UNNECESSARY", "FX conversion/quanto is declared although every underlying is in product currency.",
+                  "execution.performance.fx_treatment")
 
 
 def _dates(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
@@ -105,3 +100,14 @@ def _condition_references(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
             bag.error("E-REF-AGG-MISMATCH",
                       f"Condition references '{cond.reference}' but the basket aggregation "
                       f"{ast.reference.aggregation.value} yields '{expected}'.", cpath)
+
+
+def _execution_terms(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
+    performance = ast.execution.performance
+    first_observation = ast.schedule.observation_schedule.first_observation
+    if performance.initial_fixing_date > first_observation:
+        bag.error("E-FIXING-DATE", "Initial fixing date must not be later than the first observation.",
+                  "execution.performance.initial_fixing_date")
+    if performance.initial_fixing_date > ast.contract.maturity_date:
+        bag.error("E-FIXING-DATE", "Initial fixing date must not be later than maturity.",
+                  "execution.performance.initial_fixing_date")
