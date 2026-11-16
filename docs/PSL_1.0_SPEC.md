@@ -30,14 +30,15 @@ The top-level mapping has the following fields:
 | `product` | mapping | yes | Product identity and denomination. |
 | `contract` | mapping | yes | Notional, dates and settlement terms. |
 | `underlyings` | sequence | yes | Declared market references. |
-| `reference` | mapping | yes | Basket aggregation and performance definition. |
+| `reference` | mapping | yes | Basket aggregation over declared underlyings. |
 | `schedule` | mapping | yes | Contractual observation schedule. |
 | `payoff` | mapping | yes | Ordered contractual payoff components. |
 | `valuation` | mapping | no | Explicit model configuration; not part of contract semantics. |
 | `risk` | mapping | no | Requested risk measures; not part of contract semantics. |
-| `execution` | typed mapping | yes | Fixing, performance, FX, coupon, event-order, redemption and settlement semantics. |\n| `metadata` | mapping | no | Non-contractual descriptive metadata. |
+| `execution` | typed mapping | yes | Fixing, performance, FX, coupon, event-order, redemption and settlement semantics. |
+| `metadata` | mapping | no | Non-contractual descriptive metadata. |
 
-Unknown fields are errors at every closed-schema mapping. Open mappings (`valuation`, `metadata`, and the explicitly extensible reference-performance details) are versioned extension points; their keys and values MUST still be validated by their owning schema before execution.
+Unknown fields are errors at every closed-schema mapping. Open mappings (`valuation` and `metadata`) are versioned extension points; their keys and values MUST still be validated by their owning schema before execution.
 
 ## 3. Primitive types and representation
 
@@ -107,11 +108,11 @@ Underlying identifiers MUST be unique. Market identifier omission means no exter
 
 Basket IDs MUST be declared, unique within the basket and ordered only where the selected aggregation semantics require order. Every declared underlying not used in the basket is diagnostic-worthy.
 
-**Performance semantics:** the reference MUST identify the initial fixing source/date and the exact normalized performance formula for each basket member. The compiler MUST NOT assume inception date is the fixing date, infer an initial level, or substitute a vendor convention. For the worst-of/best-of aggregate, the selected aggregation is applied to those normalized performances.
+**Performance semantics:** `execution.performance` MUST identify the initial fixing source/date and the exact normalized performance formula for each basket member. The PSL 1.0 formula `price_over_initial` is the price divided by its initial fixing level, so `0.70` means 70% of initial. The compiler MUST NOT assume inception date is the fixing date, infer an initial level, or substitute a vendor convention. For the worst-of/best-of aggregate, the selected aggregation is applied to those normalized ratios.
 
 **FX semantics:** if an underlying currency differs from product currency, the contract MUST explicitly state whether the payoff uses local-currency performance, FX-converted performance, or a defined quanto treatment, including the required fixing source and date/convention. No implicit FX or quanto treatment is permitted.
 
-> **Implementation conformance gap:** the current AST accepts `reference.performance` as a free-form string mapping and the current semantic validator only warns when it is absent. That is not sufficient for executable PSL 1.0. SFI-6/SFI-7 MUST replace this permissive behavior with a typed, validated structure and fail closed for missing fixing/performance/FX semantics.
+The free-form `reference.performance` mapping is not part of PSL 1.0 and is rejected as an unknown field. All fixing and performance semantics are defined in the required typed `execution.performance` mapping (see §14).
 
 ## 6. Observation schedule
 
@@ -138,13 +139,13 @@ Required fields:
 - `type: memory_coupon`
 - `annual_rate`: Decimal in [0, 1], annualized fraction
 - `condition`: `reference`, `operator`, `threshold`
-- `memory` (optional only when memory is disabled)
+- `memory`: required; `enabled` MUST be explicit
 
 Condition operators: `GTE`, `GT`, `LTE`, `LT`. Threshold is a ratio in (0, 2]. The condition reference MUST equal the reference produced by the selected aggregation: `worst_of_performance` or `best_of_performance`.
 
-When `memory.enabled: true`, `memory.unpaid_coupon` is required; PSL 1.0 defines `accumulate`. When disabled, unpaid coupon policy MUST NOT be inferred.
+When `memory.enabled: true`, `memory.unpaid_coupon` is required; PSL 1.0 defines `accumulate`. When disabled, unpaid coupon policy MUST NOT be supplied or inferred.
 
-**Additional mandatory economic terms for executable coupons:** accrual start/end rules, day-count convention, coupon payment dates, stub handling, rounding precision/mode and same-date interaction with other components MUST be explicit. The current component schema does not yet encode all these terms; until it does, coupon-bearing contracts are not execution-conformant.
+**Additional mandatory economic terms for executable coupons:** accrual start/end rules, day-count convention, coupon payment dates, stub handling, rounding precision/mode and same-date interaction with other components are mandatory in `execution.coupon` and `execution.same_date_priority`.
 
 ### 7.2 Autocall
 
@@ -195,7 +196,7 @@ A compiler MUST reject execution eligibility if any of these terms is absent. Wa
 
 The compiler emits FIR 1.0 with a contract payload containing:
 
-`fir_version`, `product`, `terms`, `underlyings`, `reference`, `observation_schedule`, `components`.
+`fir_version`, `product`, `terms`, `underlyings`, `reference`, `observation_schedule`, `components`, `execution_terms`.
 
 The enclosing document contains:
 - `contract` and `contract_hash`;
@@ -244,13 +245,13 @@ Negative examples MUST include at least: duplicate YAML key; unknown field; unsu
 
 The following are release blockers for PSL 1.0 execution conformance:
 
-- [ ] Replace free-form performance mapping with typed initial-fixing/performance semantics.
-- [ ] Define and validate FX/quanto treatment for cross-currency underlyings.
-- [ ] Encode coupon accrual, day count, payment schedule, stubs and rounding.
-- [ ] Encode deterministic same-date component/event precedence.
-- [ ] Encode autocall redemption and coupon settlement treatment.
-- [ ] Encode maturity redemption formula, including barrier equality.
-- [ ] Encode settlement calendar and business-day adjustment.
+- [x] Replace free-form performance mapping with typed initial-fixing/performance semantics.
+- [x] Define and validate FX/quanto treatment for cross-currency underlyings (quanto includes an explicit rate).
+- [x] Encode coupon accrual, day count, payment schedule, stubs and rounding.
+- [x] Encode deterministic same-date component/event precedence.
+- [x] Encode autocall redemption and coupon settlement treatment.
+- [x] Encode maturity redemption formula, including barrier equality.
+- [x] Encode settlement calendar and business-day adjustment.
 - [ ] Publish machine-readable PSL 1.0 schema and positive/negative fixtures.
 - [ ] Ensure all semantic omissions above are errors for execution eligibility.
 - [ ] Verify compiler and schema behavior with golden, property, negative and compatibility tests in CI.
