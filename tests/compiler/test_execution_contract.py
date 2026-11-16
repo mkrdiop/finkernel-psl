@@ -77,3 +77,30 @@ def test_execution_terms_are_present_in_canonical_fir(compiler, phoenix_yaml):
     payload = result.fir.contract.model_dump(mode="json")
     assert payload["execution_terms"]["performance"]["formula"] == "price_over_initial_minus_one"
     assert payload["execution_terms"]["same_date_priority"] == ["coupon", "autocall", "capital_redemption"]
+
+
+def test_quanto_requires_an_explicit_quanto_rate(compiler, phoenix_data):
+    terms = phoenix_data["execution"]["performance"]
+    terms.update({
+        "fx_treatment": "quanto",
+        "fx_fixing_date": "2027-01-14",
+        "fx_fixing_source": "contractual_fx_fixing",
+        "fx_quote_convention": "product_per_underlying",
+    })
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-EXECUTION-TERMS" in codes(result)
+
+
+def test_memory_coupon_requires_explicit_enabled_or_disabled_state(compiler, phoenix_data):
+    mutate(phoenix_data, "payoff.components[0].memory", DELETE)
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-COUPON-MEMORY-UNSPECIFIED" in codes(result)
+
+
+def test_unregistered_product_subtype_is_not_executable(compiler, phoenix_data):
+    phoenix_data["product"]["subtype"] = "unregistered_product"
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-SUBTYPE-UNREGISTERED" in codes(result)
