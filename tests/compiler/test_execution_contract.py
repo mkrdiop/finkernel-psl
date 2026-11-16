@@ -126,3 +126,14 @@ def test_disabled_coupon_memory_cannot_carry_an_unpaid_policy(compiler, phoenix_
     result = compile_data(compiler, phoenix_data)
     assert not result.success and result.fir is None
     assert "E-UNPAID-COUPON-WHEN-DISABLED" in codes(result)
+
+def test_single_quanto_rate_cannot_cover_multiple_foreign_currencies(compiler, phoenix_data):
+    terms = phoenix_data["execution"]["performance"]
+    terms.update({
+        "fx_treatment": "quanto",
+        "quanto_rate": 1.08,
+        "quanto_quote_convention": "product_per_underlying",
+    })
+    result = compile_data(compiler, phoenix_data)
+    assert not result.success and result.fir is None
+    assert "E-QUANTO-MULTI-CCY" in codes(result)
