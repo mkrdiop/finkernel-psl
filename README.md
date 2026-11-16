@@ -18,7 +18,7 @@ FINKERNEL is a software infrastructure to specify, validate, compile, execute an
 The normative PSL 1.0 language contract is [docs/PSL_1.0_SPEC.md](docs/PSL_1.0_SPEC.md).
 It defines the grammar's field contract, types, units, enumerations, validation rules,
 fail-closed requirements, canonical FPIR/hash semantics and compatibility policy.
-The implementation and examples MUST conform to this specification. Known implementation
+The implementation and examples MUST conform to this specification. The executable contract schema is [schemas/psl/v1/psl.schema.json](schemas/psl/v1/psl.schema.json), and the canonical FIR 1.0 schema is [schemas/fir/v1/fir.schema.json](schemas/fir/v1/fir.schema.json). Known implementation
 gaps are explicitly tracked in its M1 conformance checklist; a structurally compilable
 example is not necessarily eligible for execution.
 
@@ -26,7 +26,7 @@ example is not necessarily eligible for execution.
 
 ```bash
 pip install -e ".[dev]"      # compiler only needs pydantic + PyYAML
-pytest
+pytest -q
 python scripts/run_demo.py
 ```
 
