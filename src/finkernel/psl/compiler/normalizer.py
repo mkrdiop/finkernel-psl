@@ -70,7 +70,7 @@ def normalize(ast: PSLDocumentAST) -> Tuple[FIRContract, Optional[Dict[str, Any]
         ],
         reference=FIRReference(aggregation=ast.reference.aggregation.value,
                                underlyings=sorted(ast.reference.underlyings),
-                               performance=ast.reference.performance),
+                               underlyings=sorted(ast.reference.underlyings)),
         observation_schedule=FIRObservationSchedule(
             frequency=obs.frequency.value, first_observation=obs.first_observation.isoformat(),
             calendar=obs.calendar.value, business_day_convention=obs.business_day_convention.value),
