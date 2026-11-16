@@ -763,7 +763,7 @@
           "properties": {
             "principal_fraction": {
               "type": "string",
-              "pattern": "^[0-9]+(\\\\.[0-9]+)?$"
+              "pattern": "^[0-9]+(\\.[0-9]+)?$"
             },
             "unpaid_coupon_policy": {
               "enum": [
@@ -784,7 +784,7 @@
           "properties": {
             "above_barrier_principal_fraction": {
               "type": "string",
-              "pattern": "^[0-9]+(\\\\.[0-9]+)?$"
+              "pattern": "^[0-9]+(\\.[0-9]+)?$"
             },
             "below_barrier_formula": {
               "const": "worst_of_performance"
@@ -798,10 +798,21 @@
           }
         },
         "settlement_calendar": {
-          "type": "string"
+          "enum": [
+            "TARGET",
+            "NYSE",
+            "TOKYO",
+            "LONDON"
+          ]
         },
         "settlement_business_day_convention": {
-          "type": "string"
+          "enum": [
+            "following",
+            "modified_following",
+            "preceding",
+            "modified_preceding",
+            "unadjusted"
+          ]
         }
       }
     }
