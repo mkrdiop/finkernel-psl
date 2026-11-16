@@ -257,6 +257,27 @@
       "autocall_triggers": true,
       "expected_coupon_obligation": "0",
       "expected_memory_after_coupon": "5.00",
+      "expected_state": "TERMINATED_AUTOCALL",
+      "autocall_unpaid_coupon_policy": "forfeit",
+      "expected_autocall_unpaid_coupon_obligation": "0",
+      "expected_memory_forfeited": "5.00"
+    },
+    {
+      "id": "EVT-AUTOCALL-PAY-ALL-001",
+      "rule": "R-COUPON-MEMORY-ORDER",
+      "kind": "autocall_before_coupon_pay_all",
+      "priority": [
+        "autocall",
+        "coupon",
+        "capital_redemption"
+      ],
+      "coupon_eligible": true,
+      "memory_before": "5.00",
+      "current_coupon": "2.00",
+      "autocall_triggers": true,
+      "autocall_unpaid_coupon_policy": "pay_all",
+      "expected_coupon_obligation": "0",
+      "expected_autocall_unpaid_coupon_obligation": "5.00",
       "expected_state": "TERMINATED_AUTOCALL"
     }
   ],
