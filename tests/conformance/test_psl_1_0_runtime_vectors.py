@@ -371,15 +371,15 @@ class RuntimeContractVectors(unittest.TestCase):
     def test_execution_provenance_is_canonical_and_input_addressed(self):
         for vector in VECTORS["provenance_vectors"]:
             with self.subTest(vector=vector["id"], rule=vector["rule"]):
-                required = {"psl_version", "fir_version", "compiler_version", "runtime_version",
-                            "event_schema_version", "calendar_bundle_id", "calendar_hash",
-                            "fixing_snapshot_id", "fixing_hash"}
                 provenance = vector["provenance"]
-                self.assertEqual(set(provenance), required)
-                actual = hashlib.sha256(canonical_json(provenance).encode("utf-8")).hexdigest()
+                if vector["expected"] == "REJECT_INCOMPLETE_EXECUTION_PROVENANCE":
+                    with self.assertRaisesRegex(ContractError, vector["expected"]):
+                        execution_provenance_hash(provenance)
+                    continue
+                actual = execution_provenance_hash(provenance)
                 reordered = dict(reversed(list(provenance.items())))
-                replay = hashlib.sha256(canonical_json(reordered).encode("utf-8")).hexdigest()
-                changed = hashlib.sha256(canonical_json(vector["changed_provenance"]).encode("utf-8")).hexdigest()
+                replay = execution_provenance_hash(reordered)
+                changed = execution_provenance_hash(vector["changed_provenance"])
                 self.assertEqual(actual, vector["expected_hash"])
                 self.assertEqual(replay, vector["expected_hash"])
                 self.assertEqual(changed, vector["changed_expected_hash"])
