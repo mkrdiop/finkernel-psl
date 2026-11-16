@@ -69,7 +69,6 @@ def normalize(ast: PSLDocumentAST) -> Tuple[FIRContract, Optional[Dict[str, Any]
             for u in sorted(ast.underlyings, key=lambda u: u.id)
         ],
         reference=FIRReference(aggregation=ast.reference.aggregation.value,
-                               underlyings=sorted(ast.reference.underlyings),
                                underlyings=sorted(ast.reference.underlyings)),
         observation_schedule=FIRObservationSchedule(
             frequency=obs.frequency.value, first_observation=obs.first_observation.isoformat(),
