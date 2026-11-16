@@ -152,7 +152,7 @@ def _underlying(tc: TypeChecker, raw: Any, path: str) -> Optional[UnderlyingDecl
 
 
 def _reference(tc: TypeChecker, raw: Any, path: str) -> Optional[ReferenceAggregationNode]:
-    d = tc.fields(raw, path, required=("aggregation", "underlyings"), optional=("performance",))
+    d = tc.fields(raw, path, required=("aggregation", "underlyings"))
     if d is None:
         return None
     aggregation = tc.enum(d.get("aggregation", MISSING), join(path, "aggregation"), Aggregation)
@@ -161,22 +161,9 @@ def _reference(tc: TypeChecker, raw: Any, path: str) -> Optional[ReferenceAggreg
     if seq is not None:
         parsed = [tc.identifier(v, f"{join(path, 'underlyings')}[{i}]") for i, v in enumerate(seq)]
         ids = None if any(p is None for p in parsed) else parsed
-    performance = None
-    ok_perf = True
-    if "performance" in d:
-        pp = join(path, "performance")
-        pm = tc.free_mapping(d["performance"], pp)
-        if pm is None:
-            ok_perf = False
-        else:
-            vals = {k: tc.string(v, join(pp, k)) for k, v in pm.items()}
-            if any(v is None for v in vals.values()):
-                ok_perf = False
-            else:
-                performance = vals
-    if _none(aggregation, ids) or not ok_perf:
+    if _none(aggregation, ids):
         return None
-    return ReferenceAggregationNode(aggregation=aggregation, underlyings=ids, performance=performance)
+    return ReferenceAggregationNode(aggregation=aggregation, underlyings=ids)
 
 
 def _schedule(tc: TypeChecker, raw: Any, path: str) -> Optional[ScheduleDeclaration]:
