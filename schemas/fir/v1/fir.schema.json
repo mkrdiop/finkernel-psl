@@ -575,7 +575,119 @@
                 null
               ]
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "fx_treatment": {
+                    "const": "convert_to_product_currency"
+                  }
+                },
+                "required": [
+                  "fx_treatment"
+                ]
+              },
+              "then": {
+                "required": [
+                  "fx_fixing_date_rule",
+                  "fx_fixing_source",
+                  "fx_quote_convention"
+                ],
+                "properties": {
+                  "fx_fixing_date_rule": {
+                    "const": "initial_and_observation_fixings"
+                  },
+                  "fx_fixing_source": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fx_quote_convention": {
+                    "enum": [
+                      "product_per_underlying",
+                      "underlying_per_product"
+                    ]
+                  },
+                  "quanto_rate": {
+                    "type": "null"
+                  },
+                  "quanto_quote_convention": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "fx_treatment": {
+                    "const": "quanto"
+                  }
+                },
+                "required": [
+                  "fx_treatment"
+                ]
+              },
+              "then": {
+                "required": [
+                  "quanto_rate",
+                  "quanto_quote_convention"
+                ],
+                "properties": {
+                  "quanto_rate": {
+                    "type": "string",
+                    "pattern": "^[0-9]+(\\.[0-9]+)?$"
+                  },
+                  "quanto_quote_convention": {
+                    "enum": [
+                      "product_per_underlying",
+                      "underlying_per_product"
+                    ]
+                  },
+                  "fx_fixing_date_rule": {
+                    "type": "null"
+                  },
+                  "fx_fixing_source": {
+                    "type": "null"
+                  },
+                  "fx_quote_convention": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "fx_treatment": {
+                    "const": "local_currency"
+                  }
+                },
+                "required": [
+                  "fx_treatment"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "fx_fixing_date_rule": {
+                    "type": "null"
+                  },
+                  "fx_fixing_source": {
+                    "type": "null"
+                  },
+                  "fx_quote_convention": {
+                    "type": "null"
+                  },
+                  "quanto_rate": {
+                    "type": "null"
+                  },
+                  "quanto_quote_convention": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
         },
         "coupon": {
           "type": "object",
