@@ -72,11 +72,11 @@ def test_invalid_spec_is_rejected_with_expected_code(compiler, phoenix_data, pat
     assert "E-INTERNAL" not in codes(r)
 
 
-def test_unquoted_dates_are_accepted(compiler, phoenix_yaml):
-    """Avant : plantage 'Internal Compiler Error' car PyYAML produisait des datetime.date."""
+def test_unquoted_dates_are_rejected(compiler, phoenix_yaml):
     assert '"2027-01-15"' in phoenix_yaml
     r = compiler.compile(phoenix_yaml.replace('"2027-01-15"', "2027-01-15").replace('"2032-01-15"', "2032-01-15"))
-    assert r.success
+    assert not r.success and r.fir is None
+    assert "E-SYNTAX" in codes(r, "error")
 
 
 def test_unquoted_psl_version_gives_actionable_message(compiler, phoenix_yaml):
