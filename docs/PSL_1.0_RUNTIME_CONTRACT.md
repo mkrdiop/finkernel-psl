@@ -113,7 +113,7 @@ The runtime MUST NOT carry forward a prior fixing, interpolate, use a nearest da
 
 ### 4.2 Fixing dates
 
-Initial fixing MUST use the exact `initial_fixing_date` and `initial_fixing_source` in FIR. Scheduled observation fixings MUST use the corresponding adjusted observation date and the declared `initial_fixing_source`/price-field contract unless the FIR explicitly contains a distinct source for that purpose. PSL 1.0 does not define an independent fixing calendar or a fixing-date fallback convention.
+Initial fixing MUST use the exact `initial_fixing_date` and `initial_fixing_source` in FIR. Scheduled observation fixings MUST use the corresponding adjusted observation date and the same `initial_fixing_source` and `price_field` declared in FIR 1.0. FIR 1.0 does not define a separate observation fixing source or independent fixing calendar. PSL 1.0 does not define an independent fixing calendar or a fixing-date fallback convention.
 
 A fixing record MUST retain source, underlying identifier, price field, fixing date, value, currency where applicable and source-record identity. The fixing snapshot MUST be immutable and content-addressed for the duration of a run.
 
