@@ -254,7 +254,7 @@ The following are release blockers for PSL 1.0 execution conformance:
 - [x] Encode settlement calendar and business-day adjustment.
 - [x] Publish machine-readable PSL 1.0 schema and positive/negative fixtures.
 - [x] Ensure all semantic omissions above are errors for execution eligibility.
-- [ ] Verify compiler and schema behavior with golden, property, negative and compatibility tests in CI.
+- [x] Verify compiler and schema behavior with golden, property, negative and compatibility tests in CI.
 
 This checklist is deliberately explicit: the current compiler baseline is not declared fully PSL 1.0 execution-conformant merely because it can compile the existing Phoenix syntax example.
 
