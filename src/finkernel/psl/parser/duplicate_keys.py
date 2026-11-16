@@ -88,6 +88,15 @@ def _construct_decimal(loader: yaml.Loader, node: yaml.Node) -> Decimal:
     return value
 
 
+def _reject_unquoted_date(loader: yaml.Loader, node: yaml.Node):
+    raise PSLSyntaxError(
+        "Date literals must be quoted using YYYY-MM-DD format.",
+        line=node.start_mark.line + 1,
+        column=node.start_mark.column + 1,
+    )
+
+
+StrictPSLLoader.add_constructor("tag:yaml.org,2002:timestamp", _reject_unquoted_date)
 StrictPSLLoader.add_constructor("tag:yaml.org,2002:int", _construct_int)
 StrictPSLLoader.add_constructor("tag:yaml.org,2002:float", _construct_decimal)
 
