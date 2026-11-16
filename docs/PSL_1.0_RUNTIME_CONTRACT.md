@@ -330,7 +330,7 @@ SFI-11 is acceptable only when all of the following are true:
 3. The conformance runner executes reference functions from vector inputs and validates every expected outcome; it MUST NOT validate fixture labels against hard-coded expected labels.
 4. Schedule vectors cover monthly, quarterly, semi-annual and annual frequencies, EOM/non-EOM anchoring, adjusted-date collisions and calendar range failures.
 5. Calendar vectors execute following, preceding, modified-following, modified-preceding and unadjusted conventions, plus missing-calendar and content-hash-mismatch rejection.
-6. Settlement vectors cover calendar-day and business-day lags, zero lag and post-lag business-day adjustment.
+6. Calendar-role vectors prove that observation and settlement calendars are resolved independently; settlement vectors cover calendar-day and business-day lags, zero lag and post-lag business-day adjustment.
 7. Fixing vectors validate the complete `(underlying, date, price_field, source)` key, exact cardinality (including equal-value duplicates), key-dimension mismatches and all-or-nothing basket admission.
 8. Event vectors execute mandatory phase ordering, the supplied same-date priority permutation, all six permutations through the coupon-memory/autocall/capital-redemption reducer, terminal suppression and lifecycle transitions.
 9. Identity vectors execute canonical event-ID hashing, same-content replay, same-ID/different-content collision and duplicate-action rejection. Eligibility vectors execute every §8 predicate, including exact-rounding-equivalence and economically material rounding cases.
