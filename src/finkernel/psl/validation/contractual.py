@@ -62,7 +62,3 @@ def validate_contract(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
                     f"({coupon.condition.threshold}); this is unusual for a Phoenix.",
                     f"payoff.components[{idx[id(capital)]}].barrier.level")
 
-    if coupon is not None and autocall is not None:
-        bag.warning("W-SAME-DATE-ORDER-UNSPECIFIED",
-                    "Coupon and autocall can both trigger on the same observation date; the evaluation and "
-                    "payment order is not specified in the contract (blueprint §5.2).", "payoff.components")
