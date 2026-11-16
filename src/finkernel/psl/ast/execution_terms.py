@@ -21,6 +21,7 @@ class PerformanceDefinition(ExecutionNode):
     fx_fixing_date: Optional[date] = None
     fx_fixing_source: Optional[str] = None
     fx_quote_convention: Optional[Literal["product_per_underlying", "underlying_per_product"]] = None
+    quanto_rate: Optional[Decimal] = None
 
     @field_validator("initial_fixing_source", "fx_fixing_source")
     @classmethod
@@ -29,12 +30,32 @@ class PerformanceDefinition(ExecutionNode):
             raise ValueError("source must not be empty")
         return value
 
+    @field_validator("quanto_rate", mode="before")
+    @classmethod
+    def exact_quanto_decimal(cls, value):
+        if value is None:
+            return value
+        if isinstance(value, bool) or isinstance(value, float) or not isinstance(value, (int, Decimal)):
+            raise ValueError("quanto_rate must be an exact YAML integer or decimal")
+        return Decimal(value)
+
+    @field_validator("quanto_rate")
+    @classmethod
+    def positive_quanto_rate(cls, value):
+        if value is not None and (not value.is_finite() or value <= 0):
+            raise ValueError("quanto_rate must be finite and greater than zero")
+        return value
+
     @model_validator(mode="after")
     def require_fx_terms(self):
         if self.fx_treatment in ("convert_to_product_currency", "quanto"):
             if not all((self.fx_fixing_date, self.fx_fixing_source, self.fx_quote_convention)):
                 raise ValueError("FX conversion/quanto requires fx_fixing_date, fx_fixing_source and fx_quote_convention")
-        elif any((self.fx_fixing_date, self.fx_fixing_source, self.fx_quote_convention)):
+        if self.fx_treatment == "quanto" and self.quanto_rate is None:
+            raise ValueError("quanto requires an explicit quanto_rate")
+        if self.fx_treatment != "quanto" and self.quanto_rate is not None:
+            raise ValueError("quanto_rate is only valid for quanto treatment")
+        if self.fx_treatment == "local_currency" and any((self.fx_fixing_date, self.fx_fixing_source, self.fx_quote_convention)):
             raise ValueError("FX fixing fields are forbidden when fx_treatment is local_currency")
         return self
 
