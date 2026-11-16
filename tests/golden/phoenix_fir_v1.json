@@ -114,7 +114,8 @@
       "fx_treatment": "local_currency",
       "fx_fixing_date": null,
       "fx_fixing_source": null,
-      "fx_quote_convention": null
+      "fx_quote_convention": null,
+      "quanto_rate": null
     },
     "coupon": {
       "day_count": "ACT_365F",
