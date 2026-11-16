@@ -199,7 +199,7 @@ def reduce_same_date(vector: dict) -> dict:
             if vector["autocall_unpaid_coupon_policy"] == "pay_all":
                 coupon_obligation += memory
             memory = Decimal("0")
-            principal_obligation = Decimal("100")
+            principal_obligation = Decimal(vector["principal_amount"])
             state = "TERMINATED_AUTOCALL"
         elif component == "capital_redemption" and vector["capital_redemption_triggers"]:
             processed.append("capital_redemption")
@@ -322,6 +322,17 @@ class RuntimeContractVectors(unittest.TestCase):
                                          vector["lag"], vector["unit"],
                                          vector["convention"], self.cal)
                 self.assertEqual(actual.isoformat(), vector["expected"])
+
+    def test_observation_and_settlement_calendars_are_independent(self):
+        roles = VECTORS["calendar_roles"]
+        observation = validate_calendar(roles["observation"])
+        settlement = validate_calendar(roles["settlement"])
+        self.assertNotEqual(calendar_hash(roles["observation"]), calendar_hash(roles["settlement"]))
+        day = date.fromisoformat(roles["date"])
+        self.assertEqual(adjust_date(day, "following", observation).isoformat(),
+                         roles["observation_adjusted"])
+        self.assertEqual(adjust_date(day, "following", settlement).isoformat(),
+                         roles["settlement_adjusted"])
 
     def test_exact_fixing_key_and_basket_vectors(self):
         for vector in VECTORS["fixing_vectors"]:
