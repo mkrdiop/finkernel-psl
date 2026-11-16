@@ -13,6 +13,15 @@ FINKERNEL is a software infrastructure to specify, validate, compile, execute an
    `contract_hash`; valuation and risk configurations have their own hashes; provenance is recorded but never hashed.
 4. **Financial Execution Runtime**, 5. **Quantitative engines**: not implemented yet (see `docs/CHANGES.md`).
 
+## Authoritative language contract
+
+The normative PSL 1.0 language contract is [docs/PSL_1.0_SPEC.md](docs/PSL_1.0_SPEC.md).
+It defines the grammar's field contract, types, units, enumerations, validation rules,
+fail-closed requirements, canonical FPIR/hash semantics and compatibility policy.
+The implementation and examples MUST conform to this specification. Known implementation
+gaps are explicitly tracked in its M1 conformance checklist; a structurally compilable
+example is not necessarily eligible for execution.
+
 ## Quick start
 
 ```bash
