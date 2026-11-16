@@ -335,8 +335,8 @@ SFI-11 is acceptable only when all of the following are true:
 8. Event vectors execute mandatory phase ordering, the supplied same-date priority permutation, all six permutations through the coupon-memory/autocall/capital-redemption reducer, terminal suppression and lifecycle transitions.
 9. Identity vectors execute canonical event-ID hashing, same-content replay, same-ID/different-content collision and duplicate-action rejection. Eligibility vectors execute every §8 predicate, including exact-rounding-equivalence and economically material rounding cases.
 10. Vector failures identify a stable vector ID and rule ID; every vector group is exercised by CI on Python 3.10, 3.11 and 3.12.
-7. Tests require no production runtime implementation; the reference oracle exists solely to verify the published examples and normative expected outcomes.
-11. The contract and vectors are linked from SFI-11 and CI.
-12. No production runtime implementation begins until the user/architect explicitly accepts the specification gate.
+11. The reference oracle is specification-only and MUST NOT contain or require production runtime implementation.
+12. The contract and vectors are linked from SFI-11 and CI.
+13. No production runtime implementation begins until the user/architect explicitly accepts the specification gate.
 
 Passing this gate approves the specification and test contract only. It does not mark SFI-11 implemented, nor authorize SFI-12–15 implementation without their own approved contracts.
