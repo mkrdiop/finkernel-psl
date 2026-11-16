@@ -31,6 +31,11 @@ def _currencies(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
     if not foreign and treatment != "local_currency":
         bag.error("E-FX-UNNECESSARY", "FX conversion/quanto is declared although every underlying is in product currency.",
                   "execution.performance.fx_treatment")
+    foreign_currencies = {u.currency.value for u in ast.underlyings if u.currency != pccy}
+    if treatment == "quanto" and len(foreign_currencies) > 1:
+        bag.error("E-QUANTO-MULTI-CCY",
+                  "PSL 1.0 defines one quanto rate per contract; multiple foreign currencies require per-currency quanto rates and are not executable under this version.",
+                  "execution.performance.quanto_rate")
 
 
 def _dates(ast: PSLDocumentAST, bag: DiagnosticBag) -> None:
