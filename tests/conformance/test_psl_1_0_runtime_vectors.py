@@ -390,10 +390,13 @@ class RuntimeContractVectors(unittest.TestCase):
                 reordered = dict(reversed(list(provenance.items())))
                 replay = execution_provenance_hash(reordered)
                 changed = execution_provenance_hash(vector["changed_provenance"])
+                changed_fixing = execution_provenance_hash(vector["changed_fixing_provenance"])
                 self.assertEqual(actual, vector["expected_hash"])
                 self.assertEqual(replay, vector["expected_hash"])
                 self.assertEqual(changed, vector["changed_expected_hash"])
+                self.assertEqual(changed_fixing, vector["changed_fixing_expected_hash"])
                 self.assertNotEqual(actual, changed)
+                self.assertNotEqual(actual, changed_fixing)
 
     def test_phase_order_vector(self):
         vector = VECTORS["phase_vectors"][0]
