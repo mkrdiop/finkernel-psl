@@ -285,6 +285,15 @@ def execution_eligibility(features: dict) -> str:
     return "ELIGIBLE"
 
 
+def execution_provenance_hash(provenance: dict) -> str:
+    required = {"psl_version", "fir_version", "compiler_version", "runtime_version",
+                "event_schema_version", "calendar_bundle_id", "calendar_hash",
+                "fixing_snapshot_id", "fixing_hash"}
+    if set(provenance) != required:
+        raise ContractError("REJECT_INCOMPLETE_EXECUTION_PROVENANCE")
+    return hashlib.sha256(canonical_json(provenance).encode("utf-8")).hexdigest()
+
+
 class RuntimeContractVectors(unittest.TestCase):
     def setUp(self):
         self.bundle = VECTORS["calendar"]
