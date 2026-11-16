@@ -75,7 +75,7 @@ def test_execution_terms_are_present_in_canonical_fir(compiler, phoenix_yaml):
     result = compiler.compile(phoenix_yaml)
     assert result.success
     payload = result.fir.contract.model_dump(mode="json")
-    assert payload["execution_terms"]["performance"]["formula"] == "price_over_initial_minus_one"
+    assert payload["execution_terms"]["performance"]["formula"] == "price_over_initial"
     assert payload["execution_terms"]["same_date_priority"] == ["coupon", "autocall", "capital_redemption"]
 
 
