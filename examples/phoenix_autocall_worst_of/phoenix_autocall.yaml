@@ -98,3 +98,32 @@ risk:
     - "delta"
     - "gamma"
     - "value_at_risk"
+
+execution:
+  performance:
+    initial_fixing_date: "2027-01-14"
+    initial_fixing_source: "contractual_initial_valuation"
+    price_field: "official_close"
+    formula: "price_over_initial_minus_one"
+    fx_treatment: "local_currency"
+  coupon:
+    day_count: "ACT_365F"
+    accrual_start_rule: "inception_date"
+    accrual_end_rule: "observation_date"
+    payment_date_rule: "observation_date"
+    stub_rule: "short_first"
+    rounding_decimals: 2
+    rounding_mode: "half_even"
+  same_date_priority:
+    - "coupon"
+    - "autocall"
+    - "capital_redemption"
+  autocall_redemption:
+    principal_fraction: 1.0
+    unpaid_coupon_policy: "pay_all"
+  maturity_redemption:
+    above_barrier_principal_fraction: 1.0
+    below_barrier_formula: "worst_of_performance"
+    equality_treatment: "protected"
+  settlement_calendar: "TARGET"
+  settlement_business_day_convention: "modified_following"
