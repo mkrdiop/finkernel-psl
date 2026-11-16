@@ -388,7 +388,45 @@
             "unpaid_coupon": {
               "const": "accumulate"
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              },
+              "then": {
+                "required": [
+                  "unpaid_coupon"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "enabled": {
+                    "const": false
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              },
+              "then": {
+                "not": {
+                  "required": [
+                    "unpaid_coupon"
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     },
