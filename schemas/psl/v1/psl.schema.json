@@ -358,7 +358,8 @@
         "id",
         "type",
         "annual_rate",
-        "condition"
+        "condition",
+        "memory"
       ],
       "properties": {
         "id": {
