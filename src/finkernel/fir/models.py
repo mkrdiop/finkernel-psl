@@ -70,6 +70,51 @@ class FIRComponent(FIRNode):
     params: Dict[str, Any]
 
 
+
+class FIRExecutionPerformance(FIRNode):
+    initial_fixing_date: str
+    initial_fixing_source: str
+    price_field: str
+    formula: str
+    fx_treatment: str
+    fx_fixing_date_rule: Optional[str] = None
+    fx_fixing_source: Optional[str] = None
+    fx_quote_convention: Optional[str] = None
+    quanto_rate: Optional[str] = None
+    quanto_quote_convention: Optional[str] = None
+
+
+class FIRExecutionCoupon(FIRNode):
+    day_count: str
+    accrual_start_rule: str
+    accrual_end_rule: str
+    payment_date_rule: str
+    stub_rule: str
+    rounding_decimals: int
+    rounding_mode: str
+
+
+class FIRAutocallRedemption(FIRNode):
+    principal_fraction: str
+    unpaid_coupon_policy: str
+
+
+class FIRMaturityRedemption(FIRNode):
+    above_barrier_principal_fraction: str
+    below_barrier_formula: str
+    equality_treatment: str
+
+
+class FIRExecutionTerms(FIRNode):
+    performance: FIRExecutionPerformance
+    coupon: FIRExecutionCoupon
+    same_date_priority: List[str]
+    autocall_redemption: FIRAutocallRedemption
+    maturity_redemption: FIRMaturityRedemption
+    settlement_calendar: str
+    settlement_business_day_convention: str
+
+
 class FIRContract(FIRNode):
     fir_version: str = FIR_VERSION
     product: FIRProduct
@@ -78,7 +123,7 @@ class FIRContract(FIRNode):
     reference: FIRReference
     observation_schedule: FIRObservationSchedule
     components: List[FIRComponent]
-    execution_terms: Dict[str, Any]
+    execution_terms: FIRExecutionTerms
 
 
 class FIRProvenance(FIRNode):
